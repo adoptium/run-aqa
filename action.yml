@@ -5,9 +5,9 @@ inputs:
   version:              # jdk version
     description: 'testing jdk version'
     default: '8'
-  architecture:         # architecture
-    description: 
-    default: 'x86'
+  source:
+    description: 'git-hub hosted default or customized'
+    required: false
   build_list:           # test catagory
     description: 
     default: 'openjdk'
