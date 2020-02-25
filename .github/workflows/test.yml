@@ -8,13 +8,17 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macOS-latest]
+        os: [ubuntu-latest, windows-latest, macos-latest]
     steps:
     - uses: actions/checkout@v1
+    - uses: TheMrMilchmann/install-jdk@v1
+      with:
+        version: '11'
+        targets: 'JDK_11'
     - name: AQA
       uses: ./
       with: 
-        version: '8'
-        jdksource:
+        version: '11'
+        jdksource: 'customized'
         build_list: 'openjdk'
         target: '_jdk_custom'

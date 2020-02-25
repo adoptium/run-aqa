@@ -3229,7 +3229,9 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+/* eslint-disable prefer-template */
 const exec = __importStar(__webpack_require__(986));
+const core = __importStar(__webpack_require__(470));
 const io = __importStar(__webpack_require__(1));
 const tc = __importStar(__webpack_require__(533));
 const path = __importStar(__webpack_require__(622));
@@ -3238,13 +3240,7 @@ function runaqaTest(version, jdksource, buildList, target) {
     return __awaiter(this, void 0, void 0, function* () {
         yield installDependency();
         process.env.BUILD_LIST = buildList;
-        if (jdksource) {
-            // TODO: installJDK set output $targets, now suppose the default JAVA_HOME
-            process.env.TEST_JDK_HOME = process.env.JAVA_HOME;
-        }
-        else {
-            process.env.TEST_JDK_HOME = defaultJAVAHome(version);
-        }
+        process.env.TEST_JDK_HOME = getJAVAHome(version, jdksource);
         yield exec.exec('ls');
         //Testing
         // TODO : make run functional using get.sh?
@@ -3257,16 +3253,27 @@ function runaqaTest(version, jdksource, buildList, target) {
     });
 }
 exports.runaqaTest = runaqaTest;
-function defaultJAVAHome(version) {
-    let defaultJavahome = '';
-    defaultJavahome = process.env[`JAVA_HOME_${version}_X64`];
+function getJAVAHome(version, jdksource) {
+    let javaHome = process.env[`JAVA_HOME_${version}_X64`];
+    if (jdksource) {
+        if (`JDK_${version}` in process.env) {
+            javaHome = process.env[`JDK_${version}`];
+        }
+        else {
+            javaHome = process.env.JAVA_HOME;
+        }
+        if (process.platform === 'darwin') {
+            javaHome = path.join(javaHome, '/Contents/Home');
+        }
+        core.info(`customized javaHOme is ${javaHome}`);
+    }
     // Window path has to be in apostrophe. e.g. ''C:/Program Files/Java/***'
     if (isWindows) {
-        return `'${defaultJavahome}'`;
+        return `'${javaHome}'`;
     }
-    return defaultJavahome;
+    return javaHome;
 }
-// This function is an alternate of extra install step in workflow or alternative install action. This should go away if we move this installation to getDependency target in TKG
+// This function is an alternative of extra install step in workflow or alternative install action. This could also be implemented as github action
 function installDependency() {
     return __awaiter(this, void 0, void 0, function* () {
         if (isWindows) {

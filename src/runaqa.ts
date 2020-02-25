@@ -1,6 +1,6 @@
 /* eslint-disable prefer-template */
-import * as core from '@actions/core'
 import * as exec from '@actions/exec'
+import * as core from '@actions/core'
 import * as io from '@actions/io'
 import * as tc from '@actions/tool-cache'
 import * as path from 'path'
@@ -14,12 +14,7 @@ export async function runaqaTest(
 ): Promise<void> {
   await installDependency()
   process.env.BUILD_LIST = buildList
-  if (jdksource) {
-    // TODO: installJDK set output $targets, now suppose the default JAVA_HOME
-    process.env.TEST_JDK_HOME = process.env.JAVA_HOME
-  } else {
-    process.env.TEST_JDK_HOME = defaultJAVAHome(version)
-  }
+  process.env.TEST_JDK_HOME = getJAVAHome(version, jdksource)
   await exec.exec('ls')
   //Testing
   // TODO : make run functional using get.sh?
@@ -33,17 +28,27 @@ export async function runaqaTest(
   await exec.exec('make', [`${target}`])
 }
 
-function defaultJAVAHome(version: string): string {
-  let defaultJavahome = ''
-  defaultJavahome = process.env[`JAVA_HOME_${version}_X64`] as string
+function getJAVAHome(version: string, jdksource: string): string {
+  let javaHome = process.env[`JAVA_HOME_${version}_X64`] as string
+  if (jdksource) {
+    if (`JDK_${version}` in process.env) {
+      javaHome = process.env[`JDK_${version}`] as string
+    } else {
+      javaHome = process.env.JAVA_HOME as string
+    }
+    if (process.platform === 'darwin') {
+      javaHome = path.join(javaHome, '/Contents/Home')
+    }
+    core.info(`customized javaHOme is ${javaHome}`)
+  }
   // Window path has to be in apostrophe. e.g. ''C:/Program Files/Java/***'
   if (isWindows) {
-    return `'${defaultJavahome}'`
+    return `'${javaHome}'`
   }
-  return defaultJavahome
+  return javaHome
 }
 
-// This function is an alternate of extra install step in workflow or alternative install action. This should go away if we move this installation to getDependency target in TKG
+// This function is an alternative of extra install step in workflow or alternative install action. This could also be implemented as github action
 async function installDependency(): Promise<void> {
   if (isWindows) {
     const antContribFile = await tc.downloadTool(`https://sourceforge.net/projects/ant-contrib/files/ant-contrib/ant-contrib-1.0b2/ant-contrib-1.0b2-bin.zip/download`)
