@@ -8,7 +8,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        os: [ubuntu-latest, macos-latest]
     steps:
     - uses: actions/checkout@v1
     - uses: TheMrMilchmann/install-jdk@v1
@@ -20,5 +20,5 @@ jobs:
       with: 
         version: '11'
         jdksource: 'customized'
-        build_list: 'openjdk'
-        target: '_jdk_custom'
+        build_list: 'functional'
+        target: '_floatSanityTests'

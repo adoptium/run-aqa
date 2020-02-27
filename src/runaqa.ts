@@ -22,7 +22,8 @@ export async function runaqaTest(
     'git clone --depth 1 https://github.com/AdoptOpenJDK/openjdk-tests.git'
   )
   process.chdir('openjdk-tests')
-  await exec.exec('git clone --depth 1 https://github.com/AdoptOpenJDK/TKG.git')
+  await exec.exec('./get.sh')
+ //   await exec.exec('git clone --depth 1 https://github.com/AdoptOpenJDK/TKG.git')
   process.chdir('TKG')
   await exec.exec('make compile')
   await exec.exec('make', [`${target}`])
