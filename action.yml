@@ -5,7 +5,7 @@ inputs:
   version:              # jdk version
     description: 'testing jdk version'
     default: '8'
-  source:               # customized: if installed jdk by TheMrMilchmann/install-jdk or default: github hosted environment  
+  jdksource:               # customized: if installed jdk by TheMrMilchmann/install-jdk or default: github hosted environment  
     description: 'git-hub hosted default or customized'
     required: false
   build_list:           # test catagory
