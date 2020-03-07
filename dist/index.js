@@ -3247,10 +3247,24 @@ function runaqaTest(version, jdksource, buildList, target) {
         yield exec.exec('git clone --depth 1 https://github.com/AdoptOpenJDK/openjdk-tests.git');
         process.chdir('openjdk-tests');
         yield exec.exec('./get.sh');
-        //   await exec.exec('git clone --depth 1 https://github.com/AdoptOpenJDK/TKG.git')
+        const options = {};
+        let myOutput = '';
+        options.listeners = {
+            stdout: (data) => {
+                myOutput += data.toString();
+            }
+        };
         process.chdir('TKG');
-        yield exec.exec('make compile');
-        yield exec.exec('make', [`${target}`]);
+        try {
+            yield exec.exec('make compile');
+            yield exec.exec('make', [`${target}`], options);
+        }
+        catch (error) {
+            core.setFailed(error.message);
+        }
+        if (myOutput.includes('FAILED test targets') === true) {
+            core.setFailed('There are failed tests');
+        }
     });
 }
 exports.runaqaTest = runaqaTest;
