@@ -32,15 +32,8 @@ export async function runaqaTest(
 function getJAVAHome(version: string, jdksource: string): string {
   let javaHome = process.env[`JAVA_HOME_${version}_X64`] as string
   if (jdksource) {
-    if (`JDK_${version}` in process.env) {
-      javaHome = process.env[`JDK_${version}`] as string
-    } else {
-      javaHome = process.env.JAVA_HOME as string
-    }
-    if (process.platform === 'darwin') {
-      javaHome = path.join(javaHome, '/Contents/Home')
-    }
-    core.info(`customized javaHOme is ${javaHome}`)
+    javaHome = process.env.JAVA_HOME as string
+    core.info(`customized javaHome is ${javaHome}`)
   }
   // Window path has to be in apostrophe. e.g. ''C:/Program Files/Java/***'
   if (isWindows) {
