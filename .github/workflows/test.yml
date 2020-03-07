@@ -22,5 +22,5 @@ jobs:
       with: 
         version: '11'
         jdksource: 'customized'
-        build_list: 'functional'
-        target: '_floatSanityTests'
+        build_list: 'system'
+        target: '_MathLoadTest_bigdecimal'
