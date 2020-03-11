@@ -46,7 +46,18 @@ export async function runaqaTest(
 function getJAVAHome(version: string, jdksource: string): string {
   let javaHome = process.env[`JAVA_HOME_${version}_X64`] as string
   if (jdksource) {
-    javaHome = process.env.JAVA_HOME as string
+    // work with AdoptOpenJDK/install-sdk
+    if (`JDK_${version}` in process.env) {
+      javaHome = process.env[`JDK_${version}`] as string
+    } else {
+      javaHome = process.env.JAVA_HOME as string
+    }
+    // TODO: if AdoptOpenJDK/install-sdk fix the bug with mac JDK this if block can be removed
+    if (process.platform === 'darwin') {
+      javaHome = path.join(javaHome, '/Contents/Home')
+    }
+    // TODO: if actions/setup-java available for download JDK from AdoptOpenJDK
+    // javaHome = process.env.JAVA_HOME as string
     core.info(`customized javaHome is ${javaHome}`)
   }
   // Window path has to be in apostrophe. e.g. ''C:/Program Files/Java/***'
