@@ -1,10 +1,19 @@
-name: 'Your name here'
-description: 'Provide a description here'
-author: 'Your name or organization here'
+name: 'Running AQA test'
+description: 'Running AQA test'
+author: 'Sophia Guo'
 inputs:
-  myInput:              # change this
-    description: 'input description here'
-    default: 'default value if applicable'
+  version:              # jdk version
+    description: 'testing jdk version'
+    default: '8'
+  jdksource:               # customized: if installed jdk by TheMrMilchmann/install-jdk or default: github hosted environment  
+    description: 'git-hub hosted default or customized'
+    required: false
+  build_list:           # test catagory
+    description: 
+    default: 'openjdk'
+  target:              # test
+    description: 
+    default: '_jdk_custom'
 runs:
   using: 'node12'
   main: 'dist/index.js'

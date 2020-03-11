@@ -1,117 +1,79 @@
-<p align="center">
-  <a href="https://github.com/actions/typescript-action/actions"><img alt="typescript-action status" src="https://github.com/actions/typescript-action/workflows/build-test/badge.svg"></a>
-</p>
+# RunAQA tests
 
-# Create a JavaScript Action using TypeScript
+An action to run [AQA tests](https://github.com/AdoptOpenJDK/openjdk-tests) with specific JDK on specific platform
 
-Use this template to bootstrap the creation of a JavaScript action.:rocket:
+## Usage
 
-This template includes compilication support, tests, a validation workflow, publishing, and versioning guidance.  
+See [action.yml](https://github.com/AdoptOpenJDK/runaqa/blob/master/action.yml)
 
-If you are new, there's also a simpler introduction.  See the [Hello World JavaScript Action](https://github.com/actions/hello-world-javascript-action)
+## Default JDK: run openjdk test _jdk_custom against default JDK on Github hosted virtual machine
 
-## Create an action from this template
-
-Click the `Use this Template` and provide the new repo details for your action
-
-## Code in Master
-
-Install the dependencies  
-```bash
-$ npm install
 ```
-
-Build the typescript
-```bash
-$ npm run build
+    steps:
+    - uses: actions/checkout@v1
+    - name: AQA
+      uses: AdoptOpenJDK/run-aqa@v1
+      with: 
+        build_list: 'openjdk'
+        target: '_jdk_custom'
 ```
+You can also:
+  - run functional, external, system, perf tests
+  - run different level target
+  - run against different JDK on Github hosted virtual machine
+     ```version: '13' ```
 
-Run the tests :heavy_check_mark:  
-```bash
-$ npm test
+## Customized JDK : run openjdk test _jdk_custom against customized JDK, work with [actions/setup-java](https://github.com/actions/setup-java)
 
- PASS  ./index.test.js
-  ✓ throws invalid number (3ms)
-  ✓ wait 500 ms (504ms)
-  ✓ test runs (95ms)
-
-...
 ```
+    - uses: actions/setup-java@v1
+      with:
+        java-version: '11' # The JDK version to make available on the path.
+    - name: AQA
+      uses: AdoptOpenJDK/run-aqa@v1
+      with: 
+        version: '11'
+        jdksource: 'customized'
+        build_list: 'openjdk'
+        target: '_jdk_math'
+ ```
 
-## Change action.yml
+## Work with [upload-artifact](https://github.com/actions/upload-artifact) to upload testoutput if there are test failures
 
-The action.yml contains defines the inputs and output for your action.
-
-Update the action.yml with your name, description, inputs and outputs for your action.
-
-See the [documentation](https://help.github.com/en/articles/metadata-syntax-for-github-actions)
-
-## Change the Code
-
-Most toolkit and CI/CD operations involve async operations so the action is run in an async function.
-
-```javascript
-import * as core from '@actions/core';
-...
-
-async function run() {
-  try { 
-      ...
-  } 
-  catch (error) {
-    core.setFailed(error.message);
-  }
-}
-
-run()
 ```
-
-See the [toolkit documentation](https://github.com/actions/toolkit/blob/master/README.md#packages) for the various packages.
-
-## Publish to a distribution branch
-
-Actions are run from GitHub repos.  We will create a releases branch and only checkin production modules (core in this case). 
-
-Comment out node_modules in .gitignore and create a releases/v1 branch
-```bash
-# comment out in distribution branches
-# node_modules/
+    - name: AQA
+      uses: AdoptOpenJDK/run-aqa@v1
+      with: 
+        version: '11'
+        build_list: 'openjdk'
+        target: '_jdk_custom
+    - uses: actions/upload-artifact@v1
+      if: failure()
+      with:
+        name: test_output
+        path: ./openjdk-tests/TKG/TKG_test_output/
 ```
+## Configuration:
 
-```bash
-$ git checkout -b releases/v1
-$ git commit -a -m "prod dependencies"
-```
+| Parameter | Default |
+| ------ | ------ |
+| version | 8 |
+| build_list | openjdk |
+| target | jdk_math |
+| jdksource |  |
 
-```bash
-$ npm prune --production
-$ git add node_modules
-$ git commit -a -m "prod dependencies"
-$ git push origin releases/v1
-```
+### version
+The Java version that tests are running against (Supported values are: 8, 9, 10, 11, 12, 13, ...)
+By default, this action will run against JKD8 installed on github action hosted virtual machine. Alternatively, a version be specified explicitly.
 
-Your action is now published! :rocket: 
+The version key should be set accordingly for custom downloads since it is used to cache JDKs which are used multiple times during the workflow.
 
-See the [versioning documentation](https://github.com/actions/toolkit/blob/master/docs/action-versioning.md)
 
-## Validate
+### build_list
+Test category. The values are openjdk, functional, system, perf, external.
 
-You can now validate the action by referencing the releases/v1 branch
+### target
+Specific testcase name or different test level under build_list
 
-```yaml
-uses: actions/typescript-action@releases/v1
-with:
-  milliseconds: 1000
-```
-
-See the [actions tab](https://github.com/actions/javascript-action/actions) for runs of this action! :rocket:
-
-## Usage:
-
-After testing you can [create a v1 tag](https://github.com/actions/toolkit/blob/master/docs/action-versioning.md) to reference the stable and tested action
-
-```yaml
-uses: actions/typescript-action@v1
-with:
-  milliseconds: 1000
-```
+### jdksource
+Customized JDK installed with [actions/setup-java](https://github.com/actions/setup-java)

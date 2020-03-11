@@ -1,9 +1,9 @@
 {
-  "name": "typescript-action",
+  "name": "runaqa",
   "version": "0.0.0",
   "private": true,
-  "description": "TypeScript template action",
-  "main": "lib/main.js",
+  "description": "",
+  "main": "lib/aqa.js",
   "scripts": {
     "build": "tsc",
     "format": "prettier --write **/*.ts",
@@ -15,17 +15,21 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/actions/typescript-action.git"
+    "url": "git+https://github.com/sophia-guo/runaqa.git"
   },
   "keywords": [
     "actions",
     "node",
     "setup"
   ],
-  "author": "YourNameOrOrganization",
+  "author": "Sophia Guo",
   "license": "MIT",
   "dependencies": {
-    "@actions/core": "^1.2.0"
+    "@actions/core": "^1.2.0",
+    "@actions/exec": "^1.0.3",
+    "@actions/github": "^2.1.0",
+    "@actions/io": "^1.0.2",
+    "@actions/tool-cache": "^1.3.1"
   },
   "devDependencies": {
     "@types/jest": "^24.0.23",
