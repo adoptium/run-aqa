@@ -13,7 +13,7 @@ jobs:
         os: [ubuntu-latest, macos-latest]
     steps:
     - uses: actions/checkout@v1
-    - uses: TheMrMilchmann/install-jdk@v1
+    - uses: AdoptOpenJDK/install-jdk@v1
       with:
         version: '11'
         targets: 'JDK_11'

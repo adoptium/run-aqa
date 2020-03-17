@@ -4,9 +4,9 @@ An action to run [AQA tests](https://github.com/AdoptOpenJDK/openjdk-tests) with
 
 ## Usage
 
-See [action.yml](https://github.com/AdoptOpenJDK/runaqa/blob/master/action.yml)
+See [action.yml](https://github.com/AdoptOpenJDK/run-aqa/blob/master/action.yml)
 
-## Default JDK: run openjdk test _jdk_custom against default JDK on Github hosted virtual machine
+## Default JDK: run openjdk test _jdk_math against default JDK on Github hosted virtual machine
 
 ```
     steps:
@@ -15,7 +15,7 @@ See [action.yml](https://github.com/AdoptOpenJDK/runaqa/blob/master/action.yml)
       uses: AdoptOpenJDK/run-aqa@v1
       with: 
         build_list: 'openjdk'
-        target: '_jdk_custom'
+        target: '_jdk_math'
 ```
 You can also:
   - run functional, external, system, perf tests
@@ -23,12 +23,30 @@ You can also:
   - run against different JDK on Github hosted virtual machine
      ```version: '13' ```
 
-## Customized JDK : run openjdk test _jdk_custom against customized JDK, work with [actions/setup-java](https://github.com/actions/setup-java)
+## Customized JDK
+### run openjdk test _jdk_math against customized JDK, work with [actions/setup-java](https://github.com/actions/setup-java)
 
 ```
     - uses: actions/setup-java@v1
       with:
         java-version: '11' # The JDK version to make available on the path.
+    - name: AQA
+      uses: AdoptOpenJDK/run-aqa@v1
+      with: 
+        version: '11'
+        jdksource: 'customized'
+        build_list: 'openjdk'
+        target: '_jdk_math'
+ ```
+### run openjdk test _jdk_math against customized JDK, work with [AdoptOpenJDK/install-jdk](https://github.com/AdoptOpenJDK/install-jdk) using JDKs are downloaded from AdoptOpenJDK
+
+```
+    - uses: AdoptOpenJDK/install-jdk@v1
+      with:
+        version: '11'
+        architecture: x64
+        targets: 'JDK_11'
+        impl: 'openj9'
     - name: AQA
       uses: AdoptOpenJDK/run-aqa@v1
       with: 
@@ -46,7 +64,7 @@ You can also:
       with: 
         version: '11'
         build_list: 'openjdk'
-        target: '_jdk_custom
+        target: '_jdk_math
     - uses: actions/upload-artifact@v1
       if: failure()
       with:
@@ -76,4 +94,4 @@ Test category. The values are openjdk, functional, system, perf, external.
 Specific testcase name or different test level under build_list
 
 ### jdksource
-Customized JDK installed with [actions/setup-java](https://github.com/actions/setup-java)
+Customized JDK installed with [actions/setup-java](https://github.com/actions/setup-java) or [AdoptOpenJDK/install-jdk](https://github.com/AdoptOpenJDK/install-jdk)
