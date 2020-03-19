@@ -3,12 +3,11 @@ import * as runaqa from './runaqa'
 
 async function run(): Promise<void> {
   try {
-    let version = core.getInput('version', {required: false})
     let buildList = core.getInput('build_list', {required: false})
     let target = core.getInput('target', {required: false})
     //  let arch = core.getInput("architecture", { required: false })
     const jdksource = core.getInput('jdksource', {required: false})
-    if (!version) version = '8'
+    const version = core.getInput('version', {required: false})
     if (!buildList) buildList = 'openjdk'
     if (!target) target = '_jdk_math'
     //  if (!arch) arch = "x64";

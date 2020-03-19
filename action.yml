@@ -2,11 +2,11 @@ name: 'Running AQA test'
 description: 'Running AQA test'
 author: 'Sophia Guo'
 inputs:
-  version:              # jdk version
-    description: 'testing jdk version'
-    default: '8'
   jdksource:               # customized: if installed jdk by TheMrMilchmann/install-jdk or default: github hosted environment  
     description: 'git-hub hosted default or customized'
+    required: false
+  version:              # jdk version
+    description: 'testing jdk version (Required when jdksource is default git-hub hosted.)'
     required: false
   build_list:           # test catagory
     description: 
