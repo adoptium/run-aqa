@@ -2886,24 +2886,25 @@ const runaqa = __importStar(__webpack_require__(475));
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            let version = core.getInput('version', { required: false });
-            let buildList = core.getInput('build_list', { required: false });
-            let target = core.getInput('target', { required: false });
-            //  let arch = core.getInput("architecture", { required: false })
             const jdksource = core.getInput('jdksource', { required: false });
-            if (!version)
-                version = '8';
-            if (!buildList)
-                buildList = 'openjdk';
-            if (!target)
-                target = '_jdk_math';
-            //  if (!arch) arch = "x64";
+            const version = core.getInput('version', { required: false });
+            const buildList = core.getInput('build_list', { required: false });
+            const target = core.getInput('target', { required: false });
+            //  let arch = core.getInput("architecture", { required: false })
+            if (jdksource !== 'upstream' &&
+                jdksource !== 'github-hosted' &&
+                jdksource !== 'install-jdk') {
+                core.error(`jdksource should be one of [upstream, github-hosted, install-jdk]. Found: ${jdksource}`);
+            }
             if (buildList !== 'openjdk' &&
                 buildList !== 'external' &&
                 buildList !== 'functional' &&
                 buildList !== 'perf' &&
                 buildList !== 'system') {
-                core.error(`buildList should be one of [openjdk, external, functional, system, perf]. Found: ${buildList}`);
+                core.setFailed(`buildList should be one of [openjdk, external, functional, system, perf]. Found: ${buildList}`);
+            }
+            if (jdksource !== 'upstream' && version.length === 0) {
+                core.setFailed('Please provide jdkversion if jdksource is github-hosted installed or AdoptOpenJKD/install-jdk installed.');
             }
             yield runaqa.runaqaTest(version, jdksource, buildList, target);
         }
@@ -3240,7 +3241,9 @@ function runaqaTest(version, jdksource, buildList, target) {
     return __awaiter(this, void 0, void 0, function* () {
         yield installDependency();
         process.env.BUILD_LIST = buildList;
-        process.env.TEST_JDK_HOME = getJAVAHome(version, jdksource);
+        if (!('TEST_JDK_HOME' in process.env))
+            process.env.TEST_JDK_HOME = getTestJdkHome(version, jdksource);
+        core.info(`test JDK is ${process.env['TEST_JDK_HOME']}`);
         yield exec.exec('ls');
         //Testing
         // TODO : make run functional using get.sh?
@@ -3268,9 +3271,9 @@ function runaqaTest(version, jdksource, buildList, target) {
     });
 }
 exports.runaqaTest = runaqaTest;
-function getJAVAHome(version, jdksource) {
+function getTestJdkHome(version, jdksource) {
     let javaHome = process.env[`JAVA_HOME_${version}_X64`];
-    if (jdksource) {
+    if (jdksource === 'install-jdk') {
         // work with AdoptOpenJDK/install-sdk
         if (`JDK_${version}` in process.env) {
             javaHome = process.env[`JDK_${version}`];
@@ -3278,13 +3281,7 @@ function getJAVAHome(version, jdksource) {
         else {
             javaHome = process.env.JAVA_HOME;
         }
-        // TODO: if AdoptOpenJDK/install-sdk fix the bug with mac JDK this if block can be removed
-        if (process.platform === 'darwin') {
-            javaHome = path.join(javaHome, '/Contents/Home');
-        }
-        // TODO: if actions/setup-java available for download JDK from AdoptOpenJDK
-        // javaHome = process.env.JAVA_HOME as string
-        core.info(`customized javaHome is ${javaHome}`);
+        core.info(`install-jdk jdkhome is ${javaHome}`);
     }
     // Window path has to be in apostrophe. e.g. ''C:/Program Files/Java/***'
     if (isWindows) {
