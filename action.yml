@@ -2,11 +2,11 @@ name: 'Running AQA test'
 description: 'Running AQA test'
 author: 'Sophia Guo'
 inputs:
+  jdksource:      # AdoptOpenJDK/install-jdk , github-hosted environment  , upstream
+    description: 'github-hosted default or customized'
+    default: 'upstream'
   version:              # jdk version
-    description: 'testing jdk version'
-    default: '8'
-  jdksource:               # customized: if installed jdk by TheMrMilchmann/install-jdk or default: github hosted environment  
-    description: 'git-hub hosted default or customized'
+    description: 'testing jdk version (Required when jdksource is github-hosted or install-jdk.)'
     required: false
   build_list:           # test catagory
     description: 

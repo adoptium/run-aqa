@@ -3,15 +3,21 @@ import * as runaqa from './runaqa'
 
 async function run(): Promise<void> {
   try {
-    let version = core.getInput('version', {required: false})
-    let buildList = core.getInput('build_list', {required: false})
-    let target = core.getInput('target', {required: false})
-    //  let arch = core.getInput("architecture", { required: false })
     const jdksource = core.getInput('jdksource', {required: false})
-    if (!version) version = '8'
-    if (!buildList) buildList = 'openjdk'
-    if (!target) target = '_jdk_math'
-    //  if (!arch) arch = "x64";
+    const version = core.getInput('version', {required: false})
+    const buildList = core.getInput('build_list', {required: false})
+    const target = core.getInput('target', {required: false})
+    //  let arch = core.getInput("architecture", { required: false })
+    if (
+      jdksource !== 'upstream' &&
+      jdksource !== 'github-hosted' &&
+      jdksource !== 'install-jdk'
+    ) {
+      core.error(
+        `jdksource should be one of [upstream, github-hosted, install-jdk]. Found: ${jdksource}`
+      )
+    }
+
     if (
       buildList !== 'openjdk' &&
       buildList !== 'external' &&
@@ -19,8 +25,13 @@ async function run(): Promise<void> {
       buildList !== 'perf' &&
       buildList !== 'system'
     ) {
-      core.error(
+      core.setFailed(
         `buildList should be one of [openjdk, external, functional, system, perf]. Found: ${buildList}`
+      )
+    }
+    if (jdksource !== 'upstream' && version.length === 0) {
+      core.setFailed(
+        'Please provide jdkversion if jdksource is github-hosted installed or AdoptOpenJKD/install-jdk installed.'
       )
     }
 

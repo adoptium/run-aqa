@@ -15,7 +15,9 @@ export async function runaqaTest(
 ): Promise<void> {
   await installDependency()
   process.env.BUILD_LIST = buildList
-  process.env.TEST_JDK_HOME = getJAVAHome(version, jdksource)
+  if (!('TEST_JDK_HOME' in process.env)) process.env.TEST_JDK_HOME = getTestJdkHome(version, jdksource)
+  
+  core.info(`test JDK is ${process.env['TEST_JDK_HOME']}`)
   await exec.exec('ls')
   //Testing
   // TODO : make run functional using get.sh?
@@ -43,22 +45,16 @@ export async function runaqaTest(
   }
 }
 
-function getJAVAHome(version: string, jdksource: string): string {
+function getTestJdkHome(version: string, jdksource: string): string {
   let javaHome = process.env[`JAVA_HOME_${version}_X64`] as string
-  if (jdksource) {
+  if (jdksource === 'install-jdk') {
     // work with AdoptOpenJDK/install-sdk
     if (`JDK_${version}` in process.env) {
       javaHome = process.env[`JDK_${version}`] as string
     } else {
       javaHome = process.env.JAVA_HOME as string
     }
-    // TODO: if AdoptOpenJDK/install-sdk fix the bug with mac JDK this if block can be removed
-    if (process.platform === 'darwin') {
-      javaHome = path.join(javaHome, '/Contents/Home')
-    }
-    // TODO: if actions/setup-java available for download JDK from AdoptOpenJDK
-    // javaHome = process.env.JAVA_HOME as string
-    core.info(`customized javaHome is ${javaHome}`)
+    core.info(`install-jdk jdkhome is ${javaHome}`)
   }
   // Window path has to be in apostrophe. e.g. ''C:/Program Files/Java/***'
   if (isWindows) {
