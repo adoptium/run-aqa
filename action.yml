@@ -14,6 +14,10 @@ inputs:
   target:              # test
     description: 
     default: '_jdk_custom'
+  usePersonalRepo:
+    description: 'A boolean value ("true" or "false") on whether the personalRepo should be used.'
+    required: false
+    default: false
 runs:
   using: 'node12'
   main: 'dist/index.js'

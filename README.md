@@ -11,7 +11,7 @@ See [action.yml](https://github.com/AdoptOpenJDK/run-aqa/blob/master/action.yml)
 ```
     steps:
     - uses: actions/checkout@v1
-     - name: Build Openj9 JDK
+    - name: Build Openj9 JDK
        id: buildOpenj9
        uses: sophia-guo/build-jdk-openj9@v2
        with:
@@ -74,6 +74,21 @@ You can also:
         target: '_jdk_math'
 ```
 
+## Using PR's repo and branch:
+
+```
+    steps:
+    - uses: actions/checkout@v1
+    - name: AQA
+      uses: AdoptOpenJDK/run-aqa@v1
+      with: 
+        version: '11'
+        jdksource: 'github-hosted'
+        build_list: 'openjdk'
+        target: '_jdk_math'
+        usePersonalRepo: true
+```
+
 ## Work with [upload-artifact](https://github.com/actions/upload-artifact) to upload test outputs if there are test failures
 
 ```
@@ -92,6 +107,7 @@ You can also:
 | build_list | openjdk |
 | target | jdk_math |
 | jdksource | upstream |
+| usePersonalRepo | false |
 
 ### version
 The Java version that tests are running against (Supported values are: 8, 9, 10, 11, 12, 13, ...)

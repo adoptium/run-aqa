@@ -2890,6 +2890,7 @@ function run() {
             const version = core.getInput('version', { required: false });
             const buildList = core.getInput('build_list', { required: false });
             const target = core.getInput('target', { required: false });
+            const usePersonalRepo = core.getInput('usePersonalRepo') === 'true';
             //  let arch = core.getInput("architecture", { required: false })
             if (jdksource !== 'upstream' &&
                 jdksource !== 'github-hosted' &&
@@ -2906,7 +2907,7 @@ function run() {
             if (jdksource !== 'upstream' && version.length === 0) {
                 core.setFailed('Please provide jdkversion if jdksource is github-hosted installed or AdoptOpenJKD/install-jdk installed.');
             }
-            yield runaqa.runaqaTest(version, jdksource, buildList, target);
+            yield runaqa.runaqaTest(version, jdksource, buildList, target, usePersonalRepo);
         }
         catch (error) {
             core.setFailed(error.message);
@@ -3237,19 +3238,37 @@ const io = __importStar(__webpack_require__(1));
 const tc = __importStar(__webpack_require__(533));
 const path = __importStar(__webpack_require__(622));
 const isWindows = process.platform === 'win32';
-function runaqaTest(version, jdksource, buildList, target) {
+function runaqaTest(version, jdksource, buildList, target, usePersonalRepo) {
     return __awaiter(this, void 0, void 0, function* () {
         yield installDependency();
         process.env.BUILD_LIST = buildList;
         if (!('TEST_JDK_HOME' in process.env))
             process.env.TEST_JDK_HOME = getTestJdkHome(version, jdksource);
         core.info(`test JDK is ${process.env['TEST_JDK_HOME']}`);
-        yield exec.exec('ls');
-        //Testing
-        // TODO : make run functional using get.sh?
-        yield exec.exec('git clone --depth 1 https://github.com/AdoptOpenJDK/openjdk-tests.git');
+        let openjdktestRepo = 'AdoptOpenJDK/openjdk-tests';
+        let openjdktestBranch = 'master';
+        let tkgRepo = '';
+        let tkgBranch = '';
+        if (usePersonalRepo) {
+            const repo = process.env.GITHUB_REPOSITORY;
+            const ref = process.env.GITHUB_REF;
+            const branch = ref.substr(ref.lastIndexOf('/') + 1);
+            if (repo.includes('/openjdk-tests')) {
+                openjdktestRepo = repo;
+                openjdktestBranch = branch;
+            }
+            else if (repo.includes('/TKG')) {
+                tkgRepo = repo;
+                tkgBranch = branch;
+            }
+        }
+        yield exec.exec(`git clone --depth 1 -b ${openjdktestBranch} https://github.com/${openjdktestRepo}.git`);
         process.chdir('openjdk-tests');
-        yield exec.exec('./get.sh');
+        let tkgParameters = '';
+        if (tkgRepo.length !== 0) {
+            tkgParameters = `--tkg_branch ${tkgBranch} --tkg_repo https://github.com/${tkgRepo}.git`;
+        }
+        yield exec.exec(`./get.sh ${tkgParameters}`);
         const options = {};
         let myOutput = '';
         options.listeners = {

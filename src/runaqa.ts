@@ -11,21 +11,39 @@ export async function runaqaTest(
   version: string,
   jdksource: string,
   buildList: string,
-  target: string
+  target: string,
+  usePersonalRepo: boolean
 ): Promise<void> {
   await installDependency()
   process.env.BUILD_LIST = buildList
   if (!('TEST_JDK_HOME' in process.env)) process.env.TEST_JDK_HOME = getTestJdkHome(version, jdksource)
-  
+
   core.info(`test JDK is ${process.env['TEST_JDK_HOME']}`)
-  await exec.exec('ls')
-  //Testing
-  // TODO : make run functional using get.sh?
+  let openjdktestRepo = 'AdoptOpenJDK/openjdk-tests' 
+  let openjdktestBranch = 'master'
+  let tkgRepo = ''
+  let tkgBranch = ''
+  if (usePersonalRepo) {
+    const repo = process.env.GITHUB_REPOSITORY as string
+    const ref = process.env.GITHUB_REF as string
+    const branch = ref.substr(ref.lastIndexOf('/') + 1)
+    if (repo.includes('/openjdk-tests')) {
+      openjdktestRepo = repo
+      openjdktestBranch = branch
+    } else if (repo.includes('/TKG')) {
+      tkgRepo = repo
+      tkgBranch = branch
+    }
+  }
   await exec.exec(
-    'git clone --depth 1 https://github.com/AdoptOpenJDK/openjdk-tests.git'
+    `git clone --depth 1 -b ${openjdktestBranch} https://github.com/${openjdktestRepo}.git`
   )
   process.chdir('openjdk-tests')
-  await exec.exec('./get.sh')
+  let tkgParameters = ''
+  if (tkgRepo.length !== 0) {
+    tkgParameters = `--tkg_branch ${tkgBranch} --tkg_repo https://github.com/${tkgRepo}.git`
+  }
+  await exec.exec(`./get.sh ${tkgParameters}`)
   const options: ExecOptions = {}
   let myOutput = ''
   options.listeners = {
