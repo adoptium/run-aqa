@@ -90,7 +90,7 @@ You can also:
 | ------ | ------ |
 | version | 8 |
 | build_list | openjdk |
-| target | jdk_math |
+| target | _jdk_math |
 | jdksource | upstream |
 
 ### version
