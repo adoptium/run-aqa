@@ -13,7 +13,10 @@ inputs:
     default: 'openjdk'
   target:              # test
     description: 
-    default: '_jdk_custom'
+    default: '_jdk_math'
+  custom_target:
+    description:
+    required: false
 runs:
   using: 'node12'
   main: 'dist/index.js'

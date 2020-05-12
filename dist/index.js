@@ -2890,6 +2890,7 @@ function run() {
             const version = core.getInput('version', { required: false });
             const buildList = core.getInput('build_list', { required: false });
             const target = core.getInput('target', { required: false });
+            const customTarget = core.getInput('custom_target', { required: false });
             //  let arch = core.getInput("architecture", { required: false })
             if (jdksource !== 'upstream' &&
                 jdksource !== 'github-hosted' &&
@@ -2906,7 +2907,7 @@ function run() {
             if (jdksource !== 'upstream' && version.length === 0) {
                 core.setFailed('Please provide jdkversion if jdksource is github-hosted installed or AdoptOpenJKD/install-jdk installed.');
             }
-            yield runaqa.runaqaTest(version, jdksource, buildList, target);
+            yield runaqa.runaqaTest(version, jdksource, buildList, target, customTarget);
         }
         catch (error) {
             core.setFailed(error.message);
@@ -3237,9 +3238,13 @@ const io = __importStar(__webpack_require__(1));
 const tc = __importStar(__webpack_require__(533));
 const path = __importStar(__webpack_require__(622));
 const isWindows = process.platform === 'win32';
-function runaqaTest(version, jdksource, buildList, target) {
+function runaqaTest(version, jdksource, buildList, target, customTarget) {
     return __awaiter(this, void 0, void 0, function* () {
         yield installDependency();
+        let customOption = '';
+        if (target.includes('custom') && customTarget !== '') {
+            customOption = `${target.toUpperCase()}_TARGET=${customTarget}`;
+        }
         process.env.BUILD_LIST = buildList;
         if (!('TEST_JDK_HOME' in process.env))
             process.env.TEST_JDK_HOME = getTestJdkHome(version, jdksource);
@@ -3260,7 +3265,7 @@ function runaqaTest(version, jdksource, buildList, target) {
         process.chdir('TKG');
         try {
             yield exec.exec('make compile');
-            yield exec.exec('make', [`${target}`], options);
+            yield exec.exec('make', [`${target} ${customOption}`], options);
         }
         catch (error) {
             core.setFailed(error.message);

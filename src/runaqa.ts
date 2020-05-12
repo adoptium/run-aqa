@@ -11,9 +11,14 @@ export async function runaqaTest(
   version: string,
   jdksource: string,
   buildList: string,
-  target: string
+  target: string,
+  customTarget: string
 ): Promise<void> {
   await installDependency()
+  let customOption = ''
+  if (target.includes('custom') && customTarget !== '') {
+    customOption = `${target.toUpperCase()}_TARGET=${customTarget}`
+  } 
   process.env.BUILD_LIST = buildList
   if (!('TEST_JDK_HOME' in process.env)) process.env.TEST_JDK_HOME = getTestJdkHome(version, jdksource)
   
@@ -36,7 +41,7 @@ export async function runaqaTest(
   process.chdir('TKG')
   try {
     await exec.exec('make compile')
-    await exec.exec('make', [`${target}`], options)
+    await exec.exec('make', [`${target} ${customOption}`], options)
   } catch (error) {
     core.setFailed(error.message)
   }
