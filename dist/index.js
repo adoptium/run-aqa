@@ -2953,6 +2953,7 @@ function run() {
             const buildList = core.getInput('build_list', { required: false });
             const target = core.getInput('target', { required: false });
             const customTarget = core.getInput('custom_target', { required: false });
+<<<<<<< HEAD
             const aqatestsRepo = core.getInput('aqa-testsRepo', { required: false });
             const aqasystemtestsRepo = core.getInput('aqa-systemtestsRepo', {required: false});
             const openj9Repo = core.getInput('openj9_repo', { required: false });
@@ -2965,6 +2966,8 @@ function run() {
             const vendorTestDirs = core.getInput('vendor_testDirs', { required: false });
             const vendorTestShas = core.getInput('vendor_testShas', { required: false });
             let vendorTestParams = '';
+=======
+>>>>>>> 79a6303 (support custom_target)
             //  let arch = core.getInput("architecture", { required: false })
             if (jdksource !== 'upstream' &&
                 jdksource !== 'github-hosted' &&
@@ -2981,6 +2984,7 @@ function run() {
             if (jdksource !== 'upstream' && version.length === 0) {
                 core.setFailed('Please provide jdkversion if jdksource is github-hosted installed or AdoptOpenJKD/install-jdk installed.');
             }
+<<<<<<< HEAD
             if (vendorTestRepos !== '') {
                 vendorTestParams = `--vendor_repos ${vendorTestRepos}`;
             }
@@ -2994,6 +2998,9 @@ function run() {
                 vendorTestParams += ` --vendor_shas ${vendorTestShas}`;
             }
             yield runaqa.runaqaTest(version, jdksource, buildList, target, customTarget, aqatestsRepo, openj9Repo, tkgRepo, vendorTestParams, aqasystemtestsRepo,openj9systemtestsRepo);
+=======
+            yield runaqa.runaqaTest(version, jdksource, buildList, target, customTarget);
+>>>>>>> 79a6303 (support custom_target)
         }
         catch (error) {
             core.setFailed(error.message);
@@ -3378,6 +3385,7 @@ const core = __importStar(__webpack_require__(470));
 const io = __importStar(__webpack_require__(1));
 const tc = __importStar(__webpack_require__(533));
 const path = __importStar(__webpack_require__(622));
+<<<<<<< HEAD
 const fs = __importStar(__webpack_require__(747));
 let tempDirectory = process.env['RUNNER_TEMP'] || '';
 const IS_WINDOWS = process.platform === 'win32';
@@ -3399,6 +3407,16 @@ function runaqaTest(version, jdksource, buildList, target, customTarget, aqatest
     return __awaiter(this, void 0, void 0, function* () {
         yield installDependencyAndSetup();
         setSpec();
+=======
+const isWindows = process.platform === 'win32';
+function runaqaTest(version, jdksource, buildList, target, customTarget) {
+    return __awaiter(this, void 0, void 0, function* () {
+        yield installDependency();
+        let customOption = '';
+        if (target.includes('custom') && customTarget !== '') {
+            customOption = `${target.toUpperCase()}_TARGET=${customTarget}`;
+        }
+>>>>>>> 79a6303 (support custom_target)
         process.env.BUILD_LIST = buildList;
         if (!('TEST_JDK_HOME' in process.env))
             process.env.TEST_JDK_HOME = getTestJdkHome(version, jdksource);
@@ -3433,6 +3451,7 @@ function runaqaTest(version, jdksource, buildList, target, customTarget, aqatest
         process.chdir('TKG');
         try {
             yield exec.exec('make compile');
+<<<<<<< HEAD
             if (target.includes('custom') && customTarget !== '') {
                 const customOption = `${target
                     .substr(1)
@@ -3442,6 +3461,9 @@ function runaqaTest(version, jdksource, buildList, target, customTarget, aqatest
             else {
                 yield exec.exec('make', [`${target}`], options);
             }
+=======
+            yield exec.exec('make', [`${target} ${customOption}`], options);
+>>>>>>> 79a6303 (support custom_target)
         }
         catch (error) {
             core.setFailed(error.message);

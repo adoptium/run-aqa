@@ -14,6 +14,7 @@ inputs:
   target:              # test
     description: 
     default: '_jdk_math'
+<<<<<<< HEAD
   custom_target:   #  Used if need to set non-default custom target
     description:
     required: false
@@ -45,6 +46,11 @@ inputs:
   vendor_testShas:
       description: 'Comma-separated list of vendor SHAs'
       required: false
+=======
+  custom_target:
+    description:
+    required: false
+>>>>>>> 79a6303 (support custom_target)
 runs:
   using: 'node12'
   main: 'dist/index.js'

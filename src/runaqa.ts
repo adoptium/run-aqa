@@ -28,6 +28,7 @@ export async function runaqaTest(
   jdksource: string,
   buildList: string,
   target: string,
+<<<<<<< HEAD
   customTarget: string,
   aqatestsRepo: string,
   openj9Repo: string,
@@ -38,6 +39,15 @@ export async function runaqaTest(
 ): Promise<void> {
   await installDependencyAndSetup()
   setSpec()
+=======
+  customTarget: string
+): Promise<void> {
+  await installDependency()
+  let customOption = ''
+  if (target.includes('custom') && customTarget !== '') {
+    customOption = `${target.toUpperCase()}_TARGET=${customTarget}`
+  } 
+>>>>>>> 79a6303 (support custom_target)
   process.env.BUILD_LIST = buildList
   if (!('TEST_JDK_HOME' in process.env))
     process.env.TEST_JDK_HOME = getTestJdkHome(version, jdksource)
@@ -89,6 +99,7 @@ export async function runaqaTest(
   process.chdir('TKG')
   try {
     await exec.exec('make compile')
+<<<<<<< HEAD
     if (target.includes('custom') && customTarget !== '') {
       const customOption = `${target
         .substr(1)
@@ -97,6 +108,9 @@ export async function runaqaTest(
     } else {
       await exec.exec('make', [`${target}`], options)
     }
+=======
+    await exec.exec('make', [`${target} ${customOption}`], options)
+>>>>>>> 79a6303 (support custom_target)
   } catch (error) {
     core.setFailed(error.message)
   }

@@ -7,6 +7,7 @@ async function run(): Promise<void> {
     const version = core.getInput('version', {required: false})
     const buildList = core.getInput('build_list', {required: false})
     const target = core.getInput('target', {required: false})
+<<<<<<< HEAD
     const customTarget = core.getInput('custom_target', {required: false})
     const aqatestsRepo = core.getInput('aqa-testsRepo', {required: false})
     const aqasystemtestsRepo = core.getInput('aqa-systemtestsRepo', {required: false})
@@ -21,6 +22,9 @@ async function run(): Promise<void> {
     const vendorTestShas = core.getInput('vendor_testShas', {required: false})
 
     let vendorTestParams = ''
+=======
+    const customTarget = core.getInput('custom_target',{required: false})
+>>>>>>> 79a6303 (support custom_target)
     //  let arch = core.getInput("architecture", { required: false })
     if (
       jdksource !== 'upstream' &&
@@ -48,6 +52,7 @@ async function run(): Promise<void> {
         'Please provide jdkversion if jdksource is github-hosted installed or AdoptOpenJKD/install-jdk installed.'
       )
     }
+<<<<<<< HEAD
     if (vendorTestRepos !== '') {
       vendorTestParams = `--vendor_repos ${vendorTestRepos}`
     }
@@ -73,6 +78,10 @@ async function run(): Promise<void> {
       aqasystemtestsRepo,
       openj9systemtestsRepo,
     )
+=======
+
+    await runaqa.runaqaTest(version, jdksource, buildList, target, customTarget)
+>>>>>>> 79a6303 (support custom_target)
   } catch (error) {
     core.setFailed(error.message)
   }

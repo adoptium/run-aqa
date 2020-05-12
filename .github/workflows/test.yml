@@ -1,10 +1,16 @@
 name: "run-aqa build with push to master"
 on:
   push:
+<<<<<<< HEAD
     branches:
       - master
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
+=======
+    branches-ignore:
+      - '**'
+
+>>>>>>> 79a6303 (support custom_target)
 jobs:
   openjdk: # make sure build/ci work properly
     runs-on: ${{ matrix.os }}
