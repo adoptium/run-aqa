@@ -21,6 +21,6 @@ jobs:
       uses: ./
       with: 
         version: '11'
-        jdksource: 'customized'
+        jdksource: 'install-jdk'
         build_list: 'functional'
         target: '_floatSanityTests'

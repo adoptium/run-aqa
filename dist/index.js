@@ -3241,10 +3241,6 @@ const isWindows = process.platform === 'win32';
 function runaqaTest(version, jdksource, buildList, target, customTarget) {
     return __awaiter(this, void 0, void 0, function* () {
         yield installDependency();
-        let customOption = '';
-        if (target.includes('custom') && customTarget !== '') {
-            customOption = `${target.toUpperCase()}_TARGET=${customTarget}`;
-        }
         process.env.BUILD_LIST = buildList;
         if (!('TEST_JDK_HOME' in process.env))
             process.env.TEST_JDK_HOME = getTestJdkHome(version, jdksource);
@@ -3265,7 +3261,13 @@ function runaqaTest(version, jdksource, buildList, target, customTarget) {
         process.chdir('TKG');
         try {
             yield exec.exec('make compile');
-            yield exec.exec('make', [`${target} ${customOption}`], options);
+            if (target.includes('custom') && customTarget !== '') {
+                const customOption = `${target.substr(1).toUpperCase()}_TARGET=${customTarget}`;
+                yield exec.exec('make', [`${target}`, `${customOption}`], options);
+            }
+            else {
+                yield exec.exec('make', [`${target}`], options);
+            }
         }
         catch (error) {
             core.setFailed(error.message);

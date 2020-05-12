@@ -14,7 +14,7 @@ inputs:
   target:              # test
     description: 
     default: '_jdk_math'
-  custom_target:
+  custom_target:   #  Used if need to set non-default custom target
     description:
     required: false
 runs:
