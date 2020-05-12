@@ -1,8 +1,8 @@
 name: "build-test"
 on: # rebuild any PRs and main branch changes
   push:
-    branches:
-      - feature
+    branches-ignore:
+      - '**'
 
 jobs:
   build: # make sure build/ci work properly
@@ -21,6 +21,6 @@ jobs:
       uses: ./
       with: 
         version: '11'
-        jdksource: 'customized'
+        jdksource: 'install-jdk'
         build_list: 'functional'
         target: '_floatSanityTests'

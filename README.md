@@ -91,7 +91,9 @@ You can also:
 | version | 8 |
 | build_list | openjdk |
 | target | _jdk_math |
+| custom_target |  |
 | jdksource | upstream |
+
 
 ### version
 The Java version that tests are running against (Supported values are: 8, 9, 10, 11, 12, 13, ...)
@@ -102,6 +104,9 @@ Test category. The values are openjdk, functional, system, perf, external.
 
 ### target
 Specific testcase name or different test level under build_list
+
+### custom_target
+Set customized testcase when any custom target is selected(e.g. jdk_custom, langtools_custom, etc) , path to the test class to execute
 
 ### jdksource
 THe source of test against JDK. Default is `upstream`. Supported value is [`upstream`, `install-jdk`, `github-hosted`]

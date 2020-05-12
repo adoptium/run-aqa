@@ -11,7 +11,8 @@ export async function runaqaTest(
   version: string,
   jdksource: string,
   buildList: string,
-  target: string
+  target: string,
+  customTarget: string
 ): Promise<void> {
   await installDependency()
   process.env.BUILD_LIST = buildList
@@ -36,7 +37,12 @@ export async function runaqaTest(
   process.chdir('TKG')
   try {
     await exec.exec('make compile')
-    await exec.exec('make', [`${target}`], options)
+    if (target.includes('custom') && customTarget !== '') {
+      const customOption = `${target.substr(1).toUpperCase()}_TARGET=${customTarget}`
+      await exec.exec('make', [`${target}`, `${customOption}`], options)
+    } else {
+      await exec.exec('make', [`${target}`], options)
+    }
   } catch (error) {
     core.setFailed(error.message)
   }
