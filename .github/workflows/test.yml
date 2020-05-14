@@ -1,8 +1,8 @@
 name: "build-test"
 on: # rebuild any PRs and main branch changes
   push:
-    branches-ignore:
-      - '**'
+#    branches-ignore:
+#      - '**'
 
 jobs:
   build: # make sure build/ci work properly
@@ -10,7 +10,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        os: [windows-2016] #[ubuntu-latest, macos-latest]
     steps:
     - uses: actions/checkout@v1
     - uses: AdoptOpenJDK/install-jdk@v1
@@ -22,5 +22,5 @@ jobs:
       with: 
         version: '11'
         jdksource: 'install-jdk'
-        build_list: 'functional'
-        target: '_floatSanityTests'
+        build_list: 'openjdk'
+        target: '_jdk_custom'

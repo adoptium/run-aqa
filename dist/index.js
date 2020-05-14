@@ -3300,6 +3300,16 @@ function getTestJdkHome(version, jdksource) {
 function installDependency() {
     return __awaiter(this, void 0, void 0, function* () {
         if (isWindows) {
+            yield io.mkdirP('C:\\cygwin64');
+            yield io.mkdirP('C:\\cygwin_packages');
+            yield tc.downloadTool('https://cygwin.com/setup-x86_64.exe', 'C:\\temp\\cygwin.exe');
+            yield exec.exec(`C:\\temp\\cygwin.exe  --packages wget,bsdtar,rsync,gnupg,git,autoconf,make,gcc-core,mingw64-x86_64-gcc-core,unzip,zip,cpio,curl,grep,perl --quiet-mode --download --local-install
+    --delete-orphans --site  https://mirrors.kernel.org/sourceware/cygwin/
+    --local-package-dir "C:\\cygwin_packages"
+    --root "C:\\cygwin64"`);
+            //  await exec.exec(`C:\\temp\\cygwin.exe  -q -P autoconf cpio libguile2.0_22 unzip zipcurl curl-debuginfo libcurl-devel libpng15 libpng-devel`)
+            yield exec.exec(`C:/cygwin64/bin/git config --system core.autocrlf false`);
+            core.addPath(`C:\\cygwin64\\bin`);
             const antContribFile = yield tc.downloadTool(`https://sourceforge.net/projects/ant-contrib/files/ant-contrib/ant-contrib-1.0b2/ant-contrib-1.0b2-bin.zip/download`);
             const baseLocation = process.env['USERPROFILE'] || 'C:\\';
             const tempDirectory = path.join(baseLocation, 'actions', 'temp');
