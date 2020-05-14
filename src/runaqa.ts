@@ -25,6 +25,7 @@ export async function runaqaTest(
   await exec.exec(
     'git clone --depth 1 https://github.com/AdoptOpenJDK/openjdk-tests.git'
   )
+  await exec.exec('ls')
   process.chdir('openjdk-tests')
   await exec.exec('./get.sh')
   const options: ExecOptions = {}
@@ -72,6 +73,15 @@ function getTestJdkHome(version: string, jdksource: string): string {
 // This function is an alternative of extra install step in workflow or alternative install action. This could also be implemented as github action
 async function installDependency(): Promise<void> {
   if (isWindows) {
+    const antContribFile = await tc.downloadTool(`https://sourceforge.net/projects/ant-contrib/files/ant-contrib/ant-contrib-1.0b2/ant-contrib-1.0b2-bin.zip/download`)
+    const baseLocation = process.env['USERPROFILE'] || 'C:\\'
+    const tempDirectory = path.join(baseLocation, 'actions', 'temp')
+    const tempDir: string = path.join(
+      tempDirectory,
+      `temp_${Math.floor(Math.random() * 2000000000)}`
+    )
+    await tc.extractZip(`${antContribFile}`, tempDir)
+    await io.mv(`${tempDir}\\ant-contrib.jar`, `${process.env.ANT_HOME}`)
     await io.mkdirP('C:\\cygwin64')
     await io.mkdirP('C:\\cygwin_packages')
     await tc.downloadTool('https://cygwin.com/setup-x86_64.exe', 'C:\\temp\\cygwin.exe')
@@ -82,15 +92,7 @@ async function installDependency(): Promise<void> {
   //  await exec.exec(`C:\\temp\\cygwin.exe  -q -P autoconf cpio libguile2.0_22 unzip zipcurl curl-debuginfo libcurl-devel libpng15 libpng-devel`)
     await exec.exec(`C:/cygwin64/bin/git config --system core.autocrlf false`)
     core.addPath(`C:\\cygwin64\\bin`)
-    const antContribFile = await tc.downloadTool(`https://sourceforge.net/projects/ant-contrib/files/ant-contrib/ant-contrib-1.0b2/ant-contrib-1.0b2-bin.zip/download`)
-    const baseLocation = process.env['USERPROFILE'] || 'C:\\'
-    const tempDirectory = path.join(baseLocation, 'actions', 'temp')
-    const tempDir: string = path.join(
-      tempDirectory,
-      `temp_${Math.floor(Math.random() * 2000000000)}`
-    )
-    await tc.extractZip(`${antContribFile}`, tempDir)
-    io.mv(`${tempDir}\\ant-contrib.jar`, `${process.env.ANT_HOME}`)
+
   } else if (process.platform === 'darwin') {
     await exec.exec('brew install ant-contrib')
   } else {

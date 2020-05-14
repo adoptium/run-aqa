@@ -3249,6 +3249,7 @@ function runaqaTest(version, jdksource, buildList, target, customTarget) {
         //Testing
         // TODO : make run functional using get.sh?
         yield exec.exec('git clone --depth 1 https://github.com/AdoptOpenJDK/openjdk-tests.git');
+        yield exec.exec('ls');
         process.chdir('openjdk-tests');
         yield exec.exec('./get.sh');
         const options = {};
@@ -3300,6 +3301,12 @@ function getTestJdkHome(version, jdksource) {
 function installDependency() {
     return __awaiter(this, void 0, void 0, function* () {
         if (isWindows) {
+            const antContribFile = yield tc.downloadTool(`https://sourceforge.net/projects/ant-contrib/files/ant-contrib/ant-contrib-1.0b2/ant-contrib-1.0b2-bin.zip/download`);
+            const baseLocation = process.env['USERPROFILE'] || 'C:\\';
+            const tempDirectory = path.join(baseLocation, 'actions', 'temp');
+            const tempDir = path.join(tempDirectory, `temp_${Math.floor(Math.random() * 2000000000)}`);
+            yield tc.extractZip(`${antContribFile}`, tempDir);
+            yield io.mv(`${tempDir}\\ant-contrib.jar`, `${process.env.ANT_HOME}`);
             yield io.mkdirP('C:\\cygwin64');
             yield io.mkdirP('C:\\cygwin_packages');
             yield tc.downloadTool('https://cygwin.com/setup-x86_64.exe', 'C:\\temp\\cygwin.exe');
@@ -3310,12 +3317,6 @@ function installDependency() {
             //  await exec.exec(`C:\\temp\\cygwin.exe  -q -P autoconf cpio libguile2.0_22 unzip zipcurl curl-debuginfo libcurl-devel libpng15 libpng-devel`)
             yield exec.exec(`C:/cygwin64/bin/git config --system core.autocrlf false`);
             core.addPath(`C:\\cygwin64\\bin`);
-            const antContribFile = yield tc.downloadTool(`https://sourceforge.net/projects/ant-contrib/files/ant-contrib/ant-contrib-1.0b2/ant-contrib-1.0b2-bin.zip/download`);
-            const baseLocation = process.env['USERPROFILE'] || 'C:\\';
-            const tempDirectory = path.join(baseLocation, 'actions', 'temp');
-            const tempDir = path.join(tempDirectory, `temp_${Math.floor(Math.random() * 2000000000)}`);
-            yield tc.extractZip(`${antContribFile}`, tempDir);
-            io.mv(`${tempDir}\\ant-contrib.jar`, `${process.env.ANT_HOME}`);
         }
         else if (process.platform === 'darwin') {
             yield exec.exec('brew install ant-contrib');
