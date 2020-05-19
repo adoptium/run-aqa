@@ -3237,20 +3237,37 @@ const core = __importStar(__webpack_require__(470));
 const io = __importStar(__webpack_require__(1));
 const tc = __importStar(__webpack_require__(533));
 const path = __importStar(__webpack_require__(622));
-const isWindows = process.platform === 'win32';
+let tempDirectory = process.env['RUNNER_TEMP'] || '';
+const IS_WINDOWS = process.platform === 'win32';
+if (!tempDirectory) {
+    let baseLocation;
+    if (IS_WINDOWS) {
+        // On windows use the USERPROFILE env variable
+        baseLocation = process.env['USERPROFILE'] || 'C:\\';
+    }
+    else if (process.platform === 'darwin') {
+        baseLocation = '/Users';
+    }
+    else {
+        baseLocation = '/home';
+    }
+    tempDirectory = path.join(baseLocation, 'actions', 'temp');
+}
 function runaqaTest(version, jdksource, buildList, target, customTarget) {
     return __awaiter(this, void 0, void 0, function* () {
         yield installDependency();
         process.env.BUILD_LIST = buildList;
         if (!('TEST_JDK_HOME' in process.env))
             process.env.TEST_JDK_HOME = getTestJdkHome(version, jdksource);
-        core.info(`test JDK is ${process.env['TEST_JDK_HOME']}`);
-        yield exec.exec('ls');
-        //Testing
-        // TODO : make run functional using get.sh?
         yield exec.exec('git clone --depth 1 https://github.com/AdoptOpenJDK/openjdk-tests.git');
         process.chdir('openjdk-tests');
-        yield exec.exec('./get.sh');
+        yield exec.exec('ls');
+        if (IS_WINDOWS) {
+            yield exec.exec('bash ./get.sh');
+        }
+        else {
+            yield exec.exec('./get.sh');
+        }
         const options = {};
         let myOutput = '';
         options.listeners = {
@@ -3288,24 +3305,26 @@ function getTestJdkHome(version, jdksource) {
         else {
             javaHome = process.env.JAVA_HOME;
         }
-        core.info(`install-jdk jdkhome is ${javaHome}`);
-    }
-    // Window path has to be in apostrophe. e.g. ''C:/Program Files/Java/***'
-    if (isWindows) {
-        return `'${javaHome}'`;
     }
     return javaHome;
 }
 // This function is an alternative of extra install step in workflow or alternative install action. This could also be implemented as github action
 function installDependency() {
     return __awaiter(this, void 0, void 0, function* () {
-        if (isWindows) {
+        if (IS_WINDOWS) {
             const antContribFile = yield tc.downloadTool(`https://sourceforge.net/projects/ant-contrib/files/ant-contrib/ant-contrib-1.0b2/ant-contrib-1.0b2-bin.zip/download`);
-            const baseLocation = process.env['USERPROFILE'] || 'C:\\';
-            const tempDirectory = path.join(baseLocation, 'actions', 'temp');
-            const tempDir = path.join(tempDirectory, `temp_${Math.floor(Math.random() * 2000000000)}`);
-            yield tc.extractZip(`${antContribFile}`, tempDir);
-            io.mv(`${tempDir}\\ant-contrib.jar`, `${process.env.ANT_HOME}`);
+            yield tc.extractZip(`${antContribFile}`, `${tempDirectory}`);
+            yield io.cp(`${tempDirectory}/ant-contrib/lib/ant-contrib.jar`, `${process.env.ANT_HOME}\\lib`);
+            yield io.mkdirP('C:\\cygwin64');
+            yield io.mkdirP('C:\\cygwin_packages');
+            yield tc.downloadTool('https://cygwin.com/setup-x86_64.exe', 'C:\\temp\\cygwin.exe');
+            yield exec.exec(`C:\\temp\\cygwin.exe  --packages wget,bsdtar,rsync,gnupg,git,autoconf,make,gcc-core,mingw64-x86_64-gcc-core,unzip,zip,cpio,curl,grep,perl --quiet-mode --download --local-install
+    --delete-orphans --site  https://mirrors.kernel.org/sourceware/cygwin/
+    --local-package-dir "C:\\cygwin_packages"
+    --root "C:\\cygwin64"`);
+            //  await exec.exec(`C:\\temp\\cygwin.exe  -q -P autoconf cpio libguile2.0_22 unzip zipcurl curl-debuginfo libcurl-devel libpng15 libpng-devel`)
+            yield exec.exec(`C:/cygwin64/bin/git config --system core.autocrlf false`);
+            core.addPath(`C:\\cygwin64\\bin`);
         }
         else if (process.platform === 'darwin') {
             yield exec.exec('brew install ant-contrib');
