@@ -1,0 +1,30 @@
+name: "nightly sanity test"
+on:
+  schedule:
+    - cron:  '30 20 * * 1-5'
+
+jobs:
+  sanity:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-2016]
+        version: [8, 11, 14]
+        impl: [hotspot, openj9]
+        buildlist: [openjdk, system, functional]
+    steps:
+    - uses: actions/checkout@v1
+    - uses: AdoptOpenJDK/install-jdk@v1
+      with:
+        version: ${{ matrix.version }}
+        targets: JDK_${{ matrix.version }}
+        impl: ${{ matrix.impl }}
+        source: 'nightly'
+    - name: AQA
+      uses: AdoptOpenJDK/run-aqa@v1
+      with: 
+        version: ${{ matrix.version }}
+        jdksource: 'install-jdk'
+        build_list: ${{ matrix.buildlist}}
+        target: '_sanity'
