@@ -27,4 +27,4 @@ jobs:
         version: ${{ matrix.version }}
         jdksource: 'install-jdk'
         build_list: ${{ matrix.buildlist}}
-        target: '_sanity'
+        target: '_sanity.regular'
