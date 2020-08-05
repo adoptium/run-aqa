@@ -60,7 +60,7 @@ You can also:
         target: '_jdk_math'
  ```
 
-## Github-hosted JDK: run openjdk test _jdk_math against installled JDK on Github-hosted virtual machine
+## Github-hosted JDK: run openjdk test _jdk_math against installed JDK on Github-hosted virtual machine
 
 ```
     steps:
