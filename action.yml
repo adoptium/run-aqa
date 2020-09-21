@@ -17,6 +17,10 @@ inputs:
   custom_target:   #  Used if need to set non-default custom target
     description:
     required: false
+  Openjdk_testPRorPush:
+    description: 'A boolean value ("true" or "false") on whether the this is a PR|Push build'
+    required: false
+    default: false
 runs:
   using: 'node12'
   main: 'dist/index.js'

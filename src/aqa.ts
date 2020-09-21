@@ -8,6 +8,7 @@ async function run(): Promise<void> {
     const buildList = core.getInput('build_list', {required: false})
     const target = core.getInput('target', {required: false})
     const customTarget = core.getInput('custom_target',{required: false})
+    const openjdktestPRorPush = core.getInput('Openjdk_testPRorPush') === 'true'
     //  let arch = core.getInput("architecture", { required: false })
     if (
       jdksource !== 'upstream' &&
@@ -36,7 +37,7 @@ async function run(): Promise<void> {
       )
     }
 
-    await runaqa.runaqaTest(version, jdksource, buildList, target, customTarget)
+    await runaqa.runaqaTest(version, jdksource, buildList, target, customTarget, openjdktestPRorPush)
   } catch (error) {
     core.setFailed(error.message)
   }

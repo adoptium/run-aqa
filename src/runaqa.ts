@@ -30,16 +30,18 @@ export async function runaqaTest(
   jdksource: string,
   buildList: string,
   target: string,
-  customTarget: string
+  customTarget: string,
+  openjdktestPRorPush: boolean
 ): Promise<void> {
   await installDependency()
   process.env.BUILD_LIST = buildList
   if (!('TEST_JDK_HOME' in process.env)) process.env.TEST_JDK_HOME = getTestJdkHome(version, jdksource)
-  await exec.exec(
-    'git clone --depth 1 https://github.com/AdoptOpenJDK/openjdk-tests.git'
-  )
-  process.chdir('openjdk-tests')
-  await exec.exec('ls')
+  if (!openjdktestPRorPush) {
+    await exec.exec(
+      'git clone --depth 1 https://github.com/AdoptOpenJDK/openjdk-tests.git'
+    )
+    process.chdir('openjdk-tests')
+  }
   if (IS_WINDOWS) {
     await exec.exec('bash ./get.sh')
   } else {
@@ -112,3 +114,17 @@ async function installDependency(): Promise<void> {
     await exec.exec('sudo apt-get install ant-contrib -y')
   }
 }
+
+/* async function getOpenjdkTestRepo(openjdktestRepo: string): Promise<void> {
+  let repo = 'AdoptOpenJDK/openjdk-tests'
+  let branch = 'master'
+  if (openjdktestRepo !== 'AdoptOpenJDK:master') {
+    repo = process.env.GITHUB_REPOSITORY as string
+    const ref = process.env.GITHUB_REF as string
+    branch = ref.substr(ref.lastIndexOf('/') + 1)
+  }
+  await exec.exec(
+    `git clone --depth 1 -b ${branch} https://github.com/${repo}.git`
+  )
+}
+ */

@@ -2891,6 +2891,7 @@ function run() {
             const buildList = core.getInput('build_list', { required: false });
             const target = core.getInput('target', { required: false });
             const customTarget = core.getInput('custom_target', { required: false });
+            const openjdktestPRorPush = core.getInput('Openjdk_testPRorPush') === 'true';
             //  let arch = core.getInput("architecture", { required: false })
             if (jdksource !== 'upstream' &&
                 jdksource !== 'github-hosted' &&
@@ -2907,7 +2908,7 @@ function run() {
             if (jdksource !== 'upstream' && version.length === 0) {
                 core.setFailed('Please provide jdkversion if jdksource is github-hosted installed or AdoptOpenJKD/install-jdk installed.');
             }
-            yield runaqa.runaqaTest(version, jdksource, buildList, target, customTarget);
+            yield runaqa.runaqaTest(version, jdksource, buildList, target, customTarget, openjdktestPRorPush);
         }
         catch (error) {
             core.setFailed(error.message);
@@ -3254,15 +3255,16 @@ if (!tempDirectory) {
     }
     tempDirectory = path.join(baseLocation, 'actions', 'temp');
 }
-function runaqaTest(version, jdksource, buildList, target, customTarget) {
+function runaqaTest(version, jdksource, buildList, target, customTarget, openjdktestPRorPush) {
     return __awaiter(this, void 0, void 0, function* () {
         yield installDependency();
         process.env.BUILD_LIST = buildList;
         if (!('TEST_JDK_HOME' in process.env))
             process.env.TEST_JDK_HOME = getTestJdkHome(version, jdksource);
-        yield exec.exec('git clone --depth 1 https://github.com/AdoptOpenJDK/openjdk-tests.git');
-        process.chdir('openjdk-tests');
-        yield exec.exec('ls');
+        if (!openjdktestPRorPush) {
+            yield exec.exec('git clone --depth 1 https://github.com/AdoptOpenJDK/openjdk-tests.git');
+            process.chdir('openjdk-tests');
+        }
         if (IS_WINDOWS) {
             yield exec.exec('bash ./get.sh');
         }
@@ -3344,6 +3346,19 @@ function installDependency() {
         }
     });
 }
+/* async function getOpenjdkTestRepo(openjdktestRepo: string): Promise<void> {
+  let repo = 'AdoptOpenJDK/openjdk-tests'
+  let branch = 'master'
+  if (openjdktestRepo !== 'AdoptOpenJDK:master') {
+    repo = process.env.GITHUB_REPOSITORY as string
+    const ref = process.env.GITHUB_REF as string
+    branch = ref.substr(ref.lastIndexOf('/') + 1)
+  }
+  await exec.exec(
+    `git clone --depth 1 -b ${branch} https://github.com/${repo}.git`
+  )
+}
+ */ 
 
 
 /***/ }),
