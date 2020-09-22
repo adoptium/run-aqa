@@ -7,7 +7,6 @@ import * as path from 'path'
 import * as fs from 'fs'
 import {ExecOptions} from '@actions/exec/lib/interfaces'
 
-
 let tempDirectory = process.env['RUNNER_TEMP'] || ''
 const IS_WINDOWS = process.platform === 'win32'
 
@@ -31,17 +30,16 @@ export async function runaqaTest(
   buildList: string,
   target: string,
   customTarget: string,
-  openjdktestPRorPush: boolean
+  openjdktestRepo: string
 ): Promise<void> {
   await installDependency()
   process.env.BUILD_LIST = buildList
   if (!('TEST_JDK_HOME' in process.env)) process.env.TEST_JDK_HOME = getTestJdkHome(version, jdksource)
-  if (!openjdktestPRorPush) {
-    await exec.exec(
-      'git clone --depth 1 https://github.com/AdoptOpenJDK/openjdk-tests.git'
-    )
-    process.chdir('openjdk-tests')
+  const workspace = process.env['GITHUB_WORKSPACE'] || ''
+  if (!workspace.includes('work/openjdk-tests/openjdk-tests')) {
+    await getOpenjdkTestRepo(openjdktestRepo)
   }
+
   if (IS_WINDOWS) {
     await exec.exec('bash ./get.sh')
   } else {
@@ -115,16 +113,17 @@ async function installDependency(): Promise<void> {
   }
 }
 
-/* async function getOpenjdkTestRepo(openjdktestRepo: string): Promise<void> {
+async function getOpenjdkTestRepo(openjdktestRepo: string): Promise<void> {
   let repo = 'AdoptOpenJDK/openjdk-tests'
   let branch = 'master'
-  if (openjdktestRepo !== 'AdoptOpenJDK:master') {
-    repo = process.env.GITHUB_REPOSITORY as string
-    const ref = process.env.GITHUB_REF as string
-    branch = ref.substr(ref.lastIndexOf('/') + 1)
+  if (openjdktestRepo !== 'openjdk-tests:master') {
+    const tempRepo = openjdktestRepo.replace(/\s/g, '')
+    const index = tempRepo.indexOf(':')
+    repo = tempRepo.substr(0, index)
+    branch = tempRepo.substring(index + 1)
   }
   await exec.exec(
     `git clone --depth 1 -b ${branch} https://github.com/${repo}.git`
   )
+  process.chdir('openjdk-tests')
 }
- */
