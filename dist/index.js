@@ -2892,6 +2892,7 @@ function run() {
             const target = core.getInput('target', { required: false });
             const customTarget = core.getInput('custom_target', { required: false });
             const openjdktestRepo = core.getInput('openjdk_testRepo', { required: false });
+            const tkgRepo = core.getInput('tkg_Repo', { required: false });
             //  let arch = core.getInput("architecture", { required: false })
             if (jdksource !== 'upstream' &&
                 jdksource !== 'github-hosted' &&
@@ -2908,7 +2909,7 @@ function run() {
             if (jdksource !== 'upstream' && version.length === 0) {
                 core.setFailed('Please provide jdkversion if jdksource is github-hosted installed or AdoptOpenJKD/install-jdk installed.');
             }
-            yield runaqa.runaqaTest(version, jdksource, buildList, target, customTarget, openjdktestRepo);
+            yield runaqa.runaqaTest(version, jdksource, buildList, target, customTarget, openjdktestRepo, tkgRepo);
         }
         catch (error) {
             core.setFailed(error.message);
@@ -3255,7 +3256,7 @@ if (!tempDirectory) {
     }
     tempDirectory = path.join(baseLocation, 'actions', 'temp');
 }
-function runaqaTest(version, jdksource, buildList, target, customTarget, openjdktestRepo) {
+function runaqaTest(version, jdksource, buildList, target, customTarget, openjdktestRepo, tkgRepo) {
     return __awaiter(this, void 0, void 0, function* () {
         yield installDependency();
         process.env.BUILD_LIST = buildList;
@@ -3265,12 +3266,7 @@ function runaqaTest(version, jdksource, buildList, target, customTarget, openjdk
         if (!workspace.includes('work/openjdk-tests/openjdk-tests')) {
             yield getOpenjdkTestRepo(openjdktestRepo);
         }
-        if (IS_WINDOWS) {
-            yield exec.exec('bash ./get.sh');
-        }
-        else {
-            yield exec.exec('./get.sh');
-        }
+        yield runGetSh(tkgRepo);
         const options = {};
         let myOutput = '';
         options.listeners = {
@@ -3348,17 +3344,33 @@ function installDependency() {
 }
 function getOpenjdkTestRepo(openjdktestRepo) {
     return __awaiter(this, void 0, void 0, function* () {
-        let repo = 'AdoptOpenJDK/openjdk-tests';
-        let branch = 'master';
+        let repoBranch = ['AdoptOpenJDK/openjdk-tests', 'master'];
         if (openjdktestRepo !== 'openjdk-tests:master') {
-            const tempRepo = openjdktestRepo.replace(/\s/g, '');
-            const index = tempRepo.indexOf(':');
-            repo = tempRepo.substr(0, index);
-            branch = tempRepo.substring(index + 1);
+            repoBranch = parseRepoBranch(openjdktestRepo);
         }
-        yield exec.exec(`git clone --depth 1 -b ${branch} https://github.com/${repo}.git`);
+        yield exec.exec(`git clone --depth 1 -b ${repoBranch[1]} https://github.com/${repoBranch[0]}.git`);
         process.chdir('openjdk-tests');
     });
+}
+function runGetSh(tkgRepo) {
+    return __awaiter(this, void 0, void 0, function* () {
+        let tkgParameters = '';
+        let repoBranch = ['AdoptOpenJDK/TKG', 'master'];
+        if (tkgRepo !== 'TKG:master') {
+            repoBranch = parseRepoBranch(tkgRepo);
+            tkgParameters = `--tkg_branch ${repoBranch[1]} --tkg_repo https://github.com/${repoBranch[0]}.git`;
+        }
+        if (IS_WINDOWS) {
+            yield exec.exec(`bash ./get.sh ${tkgParameters}`);
+        }
+        else {
+            yield exec.exec(`./get.sh ${tkgParameters}`);
+        }
+    });
+}
+function parseRepoBranch(repoBranch) {
+    const tempRepo = repoBranch.replace(/\s/g, '');
+    return tempRepo.split(':');
 }
 
 

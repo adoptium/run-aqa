@@ -30,7 +30,8 @@ export async function runaqaTest(
   buildList: string,
   target: string,
   customTarget: string,
-  openjdktestRepo: string
+  openjdktestRepo: string,
+  tkgRepo: string
 ): Promise<void> {
   await installDependency()
   process.env.BUILD_LIST = buildList
@@ -40,11 +41,8 @@ export async function runaqaTest(
     await getOpenjdkTestRepo(openjdktestRepo)
   }
 
-  if (IS_WINDOWS) {
-    await exec.exec('bash ./get.sh')
-  } else {
-    await exec.exec('./get.sh')
-  }
+  await runGetSh(tkgRepo)
+
   const options: ExecOptions = {}
   let myOutput = ''
   options.listeners = {
@@ -114,16 +112,32 @@ async function installDependency(): Promise<void> {
 }
 
 async function getOpenjdkTestRepo(openjdktestRepo: string): Promise<void> {
-  let repo = 'AdoptOpenJDK/openjdk-tests'
-  let branch = 'master'
+  let repoBranch = ['AdoptOpenJDK/openjdk-tests', 'master']
   if (openjdktestRepo !== 'openjdk-tests:master') {
-    const tempRepo = openjdktestRepo.replace(/\s/g, '')
-    const index = tempRepo.indexOf(':')
-    repo = tempRepo.substr(0, index)
-    branch = tempRepo.substring(index + 1)
+    repoBranch = parseRepoBranch(openjdktestRepo)
   }
   await exec.exec(
-    `git clone --depth 1 -b ${branch} https://github.com/${repo}.git`
+    `git clone --depth 1 -b ${repoBranch[1]} https://github.com/${repoBranch[0]}.git`
   )
   process.chdir('openjdk-tests')
+}
+
+async function runGetSh(tkgRepo: string): Promise<void> {
+  let tkgParameters = ''
+  let repoBranch = ['AdoptOpenJDK/TKG', 'master']
+  if (tkgRepo !== 'TKG:master') {
+    repoBranch = parseRepoBranch(tkgRepo)
+    tkgParameters = `--tkg_branch ${repoBranch[1]} --tkg_repo https://github.com/${repoBranch[0]}.git`
+  }
+
+  if (IS_WINDOWS) {
+    await exec.exec(`bash ./get.sh ${tkgParameters}`)
+  } else {
+    await exec.exec(`./get.sh ${tkgParameters}`)
+  }
+}
+
+function parseRepoBranch(repoBranch: string): string[] {
+  const tempRepo = repoBranch.replace(/\s/g, '')
+  return tempRepo.split(':')
 }
