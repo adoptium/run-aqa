@@ -2893,6 +2893,7 @@ function run() {
             const customTarget = core.getInput('custom_target', { required: false });
             const openjdktestRepo = core.getInput('openjdk_testRepo', { required: false });
             const tkgRepo = core.getInput('tkg_Repo', { required: false });
+            const jdkRepo = core.getInput('jdk_Repo', { required: false });
             //  let arch = core.getInput("architecture", { required: false })
             if (jdksource !== 'upstream' &&
                 jdksource !== 'github-hosted' &&
@@ -2909,7 +2910,7 @@ function run() {
             if (jdksource !== 'upstream' && version.length === 0) {
                 core.setFailed('Please provide jdkversion if jdksource is github-hosted installed or AdoptOpenJKD/install-jdk installed.');
             }
-            yield runaqa.runaqaTest(version, jdksource, buildList, target, customTarget, openjdktestRepo, tkgRepo);
+            yield runaqa.runaqaTest(version, jdksource, buildList, target, customTarget, openjdktestRepo, tkgRepo, jdkRepo);
         }
         catch (error) {
             core.setFailed(error.message);
@@ -3256,12 +3257,17 @@ if (!tempDirectory) {
     }
     tempDirectory = path.join(baseLocation, 'actions', 'temp');
 }
-function runaqaTest(version, jdksource, buildList, target, customTarget, openjdktestRepo, tkgRepo) {
+function runaqaTest(version, jdksource, buildList, target, customTarget, openjdktestRepo, tkgRepo, jdkRepo) {
     return __awaiter(this, void 0, void 0, function* () {
         yield installDependency();
         process.env.BUILD_LIST = buildList;
         if (!('TEST_JDK_HOME' in process.env))
             process.env.TEST_JDK_HOME = getTestJdkHome(version, jdksource);
+        if (buildList === 'openjdk' && jdkRepo.length > 0) {
+            const repoBranch = parseRepoBranch(jdkRepo);
+            process.env.JDK_REPO = `https://github.com/${repoBranch[0]}.git`;
+            process.env.JDK_BRANCH = repoBranch[1];
+        }
         const workspace = process.env['GITHUB_WORKSPACE'] || '';
         if (!workspace.includes('work/openjdk-tests/openjdk-tests')) {
             yield getOpenjdkTestRepo(openjdktestRepo);

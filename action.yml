@@ -25,6 +25,9 @@ inputs:
     description: 'TKG Repo'
     required: false
     default: 'TKG:master'
+  jdk_Repo:
+    description: 'jdk Repo'
+    required: false
 runs:
   using: 'node12'
   main: 'dist/index.js'

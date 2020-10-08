@@ -31,11 +31,17 @@ export async function runaqaTest(
   target: string,
   customTarget: string,
   openjdktestRepo: string,
-  tkgRepo: string
+  tkgRepo: string,
+  jdkRepo: string
 ): Promise<void> {
   await installDependency()
   process.env.BUILD_LIST = buildList
   if (!('TEST_JDK_HOME' in process.env)) process.env.TEST_JDK_HOME = getTestJdkHome(version, jdksource)
+  if (buildList === 'openjdk' && jdkRepo.length > 0) {
+    const repoBranch = parseRepoBranch(jdkRepo)
+    process.env.JDK_REPO = `https://github.com/${repoBranch[0]}.git`
+    process.env.JDK_BRANCH = repoBranch[1]
+  }
   const workspace = process.env['GITHUB_WORKSPACE'] || ''
   if (!workspace.includes('work/openjdk-tests/openjdk-tests')) {
     await getOpenjdkTestRepo(openjdktestRepo)
