@@ -21,6 +21,10 @@ inputs:
     description: 'openjdk Repo'
     required: false
     default: 'openjdk-tests:master'
+  tkg_Repo:
+    description: 'TKG Repo'
+    required: false
+    default: 'TKG:master'
 runs:
   using: 'node12'
   main: 'dist/index.js'
