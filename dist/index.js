@@ -2900,11 +2900,11 @@ function run() {
                 core.error(`jdksource should be one of [upstream, github-hosted, install-jdk]. Found: ${jdksource}`);
             }
             if (buildList !== 'openjdk' &&
-                buildList !== 'external' &&
-                buildList !== 'functional' &&
-                buildList !== 'perf' &&
-                buildList !== 'system') {
-                core.setFailed(`buildList should be one of [openjdk, external, functional, system, perf]. Found: ${buildList}`);
+                !buildList.startsWith('external') &&
+                !buildList.startsWith('functional') &&
+                !buildList.startsWith('perf') &&
+                !buildList.startsWith('system')) {
+                core.setFailed(`buildList should be one of or sub dir of [openjdk, external, functional, system, perf]. Found: ${buildList}`);
             }
             if (jdksource !== 'upstream' && version.length === 0) {
                 core.setFailed('Please provide jdkversion if jdksource is github-hosted installed or AdoptOpenJKD/install-jdk installed.');
