@@ -24,13 +24,13 @@ async function run(): Promise<void> {
 
     if (
       buildList !== 'openjdk' &&
-      buildList !== 'external' &&
-      buildList !== 'functional' &&
-      buildList !== 'perf' &&
-      buildList !== 'system'
+      !buildList.startsWith('external') &&
+      !buildList.startsWith('functional') &&
+      !buildList.startsWith('perf') &&
+      !buildList.startsWith('system')
     ) {
       core.setFailed(
-        `buildList should be one of [openjdk, external, functional, system, perf]. Found: ${buildList}`
+        `buildList should be one of or sub dir of [openjdk, external, functional, system, perf]. Found: ${buildList}`
       )
     }
     if (jdksource !== 'upstream' && version.length === 0) {
