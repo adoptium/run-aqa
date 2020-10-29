@@ -3380,11 +3380,9 @@ function runaqaTest(version, jdksource, buildList, target, customTarget, openjdk
         process.env.BUILD_LIST = buildList;
         if (!('TEST_JDK_HOME' in process.env))
             process.env.TEST_JDK_HOME = getTestJdkHome(version, jdksource);
-        const workspace = process.env['GITHUB_WORKSPACE'] || '';
-        exec.exec('ls');
-        exec.exec('pwd');
-        core.info(`workspace is ${workspace}`);
-        if (!workspace.includes('/openjdk-tests/openjdk-tests')) {
+        const workdir = `pwd`;
+        core.info(`workdir is ${workdir}`);
+        if (!workdir.includes('/openjdk-tests/openjdk-tests')) {
             yield getOpenjdkTestRepo(openjdktestRepo);
         }
         yield runGetSh(tkgRepo);
