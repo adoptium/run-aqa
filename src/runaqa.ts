@@ -37,6 +37,9 @@ export async function runaqaTest(
   process.env.BUILD_LIST = buildList
   if (!('TEST_JDK_HOME' in process.env)) process.env.TEST_JDK_HOME = getTestJdkHome(version, jdksource)
   const workspace = process.env['GITHUB_WORKSPACE'] || ''
+  exec.exec('ls')
+  exec.exec('pwd')
+  core.info(`workspace is ${workspace}`)
   if (!workspace.includes('/openjdk-tests/openjdk-tests')) {
     await getOpenjdkTestRepo(openjdktestRepo)
   }
