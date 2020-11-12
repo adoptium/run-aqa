@@ -13,7 +13,7 @@ See [action.yml](https://github.com/AdoptOpenJDK/run-aqa/blob/master/action.yml)
     - uses: actions/checkout@v1
      - name: Build Openj9 JDK
        id: buildOpenj9
-       uses: sophia-guo/build-jdk-openj9@v2
+       uses: eclipse/build-openj9@v1
        with:
          version: '8'
     - name: AQA
@@ -93,7 +93,8 @@ You can also:
 | target | _jdk_math |
 | custom_target |  |
 | jdksource | upstream |
-
+| openjdk_testRepo | openjdk-tests:master |
+| tkg_Repo | TKG:master |
 
 ### version
 The Java version that tests are running against (Supported values are: 8, 9, 10, 11, 12, 13, ...)
@@ -114,3 +115,8 @@ THe source of test against JDK. Default is `upstream`. Supported value is [`upst
   - install-jdk: JDK installed by [AdoptOpenJDK/install-jdk](https://github.com/AdoptOpenJDK/install-jdk) | [actions/setup-java](https://github.com/actions/setup-java)
   - github-hosted : pre-installed JDK on github-hosted environment
 
+### openjdk_testRepo
+Openjdk-tests git repo, that holds the definitions for the AQA test suite. Parameter can be set to use developer's personal repo. 
+
+### tkg_Repo
+TKG git repo, the underlying framework for the AQA test suite. Parameter can be set to use developer's personal repo.
