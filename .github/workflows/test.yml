@@ -3,7 +3,8 @@ on:
   push:
     branches:
       - master
-
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
 jobs:
   openjdk: # make sure build/ci work properly
     runs-on: ${{ matrix.os }}
@@ -33,6 +34,7 @@ jobs:
         version: '11'
         targets: 'JDK_11'
         impl: 'openj9'
+        source: 'nightly'
     - name: AQA
       uses: ./
       with: 
@@ -53,6 +55,7 @@ jobs:
         version: '11'
         targets: 'JDK_11'
         impl: 'openj9'
+        source: 'nightly'
     - name: AQA
       uses: ./
       with: 
