@@ -3423,6 +3423,10 @@ function getTestJdkHome(version, jdksource) {
             javaHome = process.env.JAVA_HOME;
         }
     }
+    // Remove spaces in Windows path and replace with a short name path, e.g. 'C:/Program Files/***' ->C:/Progra~1/***
+    if (IS_WINDOWS && jdksource === 'github-hosted') {
+        javaHome = javaHome.replace(/Program Files/g, 'Progra~1');
+    }
     return javaHome;
 }
 // This function is an alternative of extra install step in workflow or alternative install action. This could also be implemented as github action

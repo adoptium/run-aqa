@@ -77,6 +77,10 @@ function getTestJdkHome(version: string, jdksource: string): string {
       javaHome = process.env.JAVA_HOME as string
     }
   }
+  // Remove spaces in Windows path and replace with a short name path, e.g. 'C:/Program Files/***' ->C:/Progra~1/***
+  if (IS_WINDOWS && jdksource === 'github-hosted') {
+    javaHome = javaHome.replace(/Program Files/g, 'Progra~1')
+  }
   return javaHome
 }
 
