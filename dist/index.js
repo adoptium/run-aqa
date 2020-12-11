@@ -3461,6 +3461,12 @@ function installDependency() {
         else {
             yield exec.exec('sudo apt-get update');
             yield exec.exec('sudo apt-get install ant-contrib -y');
+            if ('RUNNER_USER' in process.env) {
+                process.env['LOGNAME'] = process.env['RUNNER_USER'];
+            }
+            else {
+                core.warning('RUNNER_USER is not the GitHub Actions environment variables shell script. Container is configured differently. Please check the updated lists of environment variables.');
+            }
         }
     });
 }
