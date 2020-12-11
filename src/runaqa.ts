@@ -34,6 +34,7 @@ export async function runaqaTest(
   tkgRepo: string
 ): Promise<void> {
   await installDependency()
+  setSpec()
   process.env.BUILD_LIST = buildList
   if (!('TEST_JDK_HOME' in process.env)) process.env.TEST_JDK_HOME = getTestJdkHome(version, jdksource)
   const workspace = process.env['GITHUB_WORKSPACE'] || ''
@@ -117,6 +118,16 @@ async function installDependency(): Promise<void> {
     } else {
       core.warning('RUNNER_USER is not the GitHub Actions environment variables shell script. Container is configured differently. Please check the updated lists of environment variables.')
     }
+  }
+}
+
+function setSpec(): void {
+  if (IS_WINDOWS) {
+    process.env['SPEC'] = 'win_x86-64_cmprssptrs'
+  } else if (process.platform === 'darwin') {
+    process.env['SPEC'] = 'osx_x86-64_cmprssptrs'
+  } else {
+    process.env['SPEC'] = 'linux_x86-64_cmprssptrs'
   }
 }
 
