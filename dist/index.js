@@ -3377,6 +3377,7 @@ if (!tempDirectory) {
 function runaqaTest(version, jdksource, buildList, target, customTarget, openjdktestRepo, tkgRepo) {
     return __awaiter(this, void 0, void 0, function* () {
         yield installDependency();
+        setSpec();
         process.env.BUILD_LIST = buildList;
         if (!('TEST_JDK_HOME' in process.env))
             process.env.TEST_JDK_HOME = getTestJdkHome(version, jdksource);
@@ -3469,6 +3470,17 @@ function installDependency() {
             }
         }
     });
+}
+function setSpec() {
+    if (IS_WINDOWS) {
+        process.env['SPEC'] = 'win_x86-64_cmprssptrs';
+    }
+    else if (process.platform === 'darwin') {
+        process.env['SPEC'] = 'osx_x86-64_cmprssptrs';
+    }
+    else {
+        process.env['SPEC'] = 'linux_x86-64_cmprssptrs';
+    }
 }
 function getOpenjdkTestRepo(openjdktestRepo) {
     return __awaiter(this, void 0, void 0, function* () {
