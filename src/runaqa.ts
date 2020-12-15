@@ -33,7 +33,7 @@ export async function runaqaTest(
   openjdktestRepo: string,
   tkgRepo: string
 ): Promise<void> {
-  await installDependency()
+  await installDependencyAndSetup()
   setSpec()
   process.env.BUILD_LIST = buildList
   if (!('TEST_JDK_HOME' in process.env)) process.env.TEST_JDK_HOME = getTestJdkHome(version, jdksource)
@@ -86,7 +86,7 @@ function getTestJdkHome(version: string, jdksource: string): string {
 }
 
 // This function is an alternative of extra install step in workflow or alternative install action. This could also be implemented as github action
-async function installDependency(): Promise<void> {
+async function installDependencyAndSetup(): Promise<void> {
   if (IS_WINDOWS) {
     const cygwinPath = 'C:\\cygwin64'
     try {
@@ -110,6 +110,8 @@ async function installDependency(): Promise<void> {
     await io.cp(`${tempDirectory}/ant-contrib/lib/ant-contrib.jar`,`${process.env.ANT_HOME}\\lib`)
   } else if (process.platform === 'darwin') {
     await exec.exec('brew install ant-contrib')
+    await exec.exec('sudo sysctl -w kern.sysv.shmall=655360')
+    await exec.exec('sudo sysctl -w kern.sysv.shmmax=125839605760')
   } else {
     await exec.exec('sudo apt-get update')
     await exec.exec('sudo apt-get install ant-contrib -y')

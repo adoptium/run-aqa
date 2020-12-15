@@ -3376,7 +3376,7 @@ if (!tempDirectory) {
 }
 function runaqaTest(version, jdksource, buildList, target, customTarget, openjdktestRepo, tkgRepo) {
     return __awaiter(this, void 0, void 0, function* () {
-        yield installDependency();
+        yield installDependencyAndSetup();
         setSpec();
         process.env.BUILD_LIST = buildList;
         if (!('TEST_JDK_HOME' in process.env))
@@ -3431,7 +3431,7 @@ function getTestJdkHome(version, jdksource) {
     return javaHome;
 }
 // This function is an alternative of extra install step in workflow or alternative install action. This could also be implemented as github action
-function installDependency() {
+function installDependencyAndSetup() {
     return __awaiter(this, void 0, void 0, function* () {
         if (IS_WINDOWS) {
             const cygwinPath = 'C:\\cygwin64';
@@ -3458,6 +3458,8 @@ function installDependency() {
         }
         else if (process.platform === 'darwin') {
             yield exec.exec('brew install ant-contrib');
+            yield exec.exec('sudo sysctl -w kern.sysv.shmall=655360');
+            yield exec.exec('sudo sysctl -w kern.sysv.shmmax=125839605760');
         }
         else {
             yield exec.exec('sudo apt-get update');
