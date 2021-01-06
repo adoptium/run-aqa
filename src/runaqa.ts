@@ -115,11 +115,15 @@ async function installDependencyAndSetup(): Promise<void> {
   } else {
     await exec.exec('sudo apt-get update')
     await exec.exec('sudo apt-get install ant-contrib -y')
+    //environment
     if ('RUNNER_USER' in process.env) {
       process.env['LOGNAME'] = process.env['RUNNER_USER']
     } else {
       core.warning('RUNNER_USER is not the GitHub Actions environment variables shell script. Container is configured differently. Please check the updated lists of environment variables.')
     }
+
+    //disable apport
+    await exec.exec('sudo service apport stop')
   }
 }
 
