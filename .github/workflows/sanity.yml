@@ -15,7 +15,7 @@ jobs:
         buildlist: [openjdk, system, functional]
     steps:
     - uses: actions/checkout@v1
-    - uses: AdoptOpenJDK/install-jdk@v1
+    - uses: ./
       with:
         version: ${{ matrix.version }}
         targets: JDK_${{ matrix.version }}
