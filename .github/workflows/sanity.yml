@@ -15,14 +15,14 @@ jobs:
         buildlist: [openjdk, system, functional]
     steps:
     - uses: actions/checkout@v1
-    - uses: ./
+    - uses: AdoptOpenJDK/install-jdk@v1
       with:
         version: ${{ matrix.version }}
         targets: JDK_${{ matrix.version }}
         impl: ${{ matrix.impl }}
         source: 'nightly'
     - name: AQA
-      uses: AdoptOpenJDK/run-aqa@v1
+      uses: ./
       with: 
         version: ${{ matrix.version }}
         jdksource: 'install-jdk'
