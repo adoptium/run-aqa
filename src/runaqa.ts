@@ -32,10 +32,7 @@ export async function runaqaTest(
   customTarget: string,
   openjdktestRepo: string,
   tkgRepo: string,
-  vendorTestRepos: string,
-  vendorTestBranches: string,
-  vendorTestDirs: string,
-  vendorTestShas: string
+  vendorTestParams: string
 ): Promise<void> {
   await installDependencyAndSetup()
   setSpec()
@@ -43,7 +40,7 @@ export async function runaqaTest(
   if (!('TEST_JDK_HOME' in process.env)) process.env.TEST_JDK_HOME = getTestJdkHome(version, jdksource)
 
   await getOpenjdkTestRepo(openjdktestRepo)
-  await runGetSh(tkgRepo, vendorTestRepos, vendorTestBranches, vendorTestDirs, vendorTestShas)
+  await runGetSh(tkgRepo, vendorTestParams)
 
   const options: ExecOptions = {}
   let myOutput = ''
@@ -149,33 +146,19 @@ async function getOpenjdkTestRepo(openjdktestRepo: string): Promise<void> {
   process.chdir('aqa-tests')
 }
 
-async function runGetSh(tkgRepo: string, vendorTestRepos: string, vendorTestBranches: string, vendorTestDirs: string, vendorTestShas: string): Promise<void> {
+async function runGetSh(tkgRepo: string, vendorTestParams: string): Promise<void> {
   let tkgParameters = ''
   let repoBranch = ['adoptium/TKG', 'master']
-  let vendorRepoParams = ''
-  let vendorBranchParams = ''
-  let vendorDirParams = ''
-  let vendorShaParams = ''
+
   if (tkgRepo !== 'TKG:master') {
     repoBranch = parseRepoBranch(tkgRepo)
     tkgParameters = `--tkg_branch ${repoBranch[1]} --tkg_repo https://github.com/${repoBranch[0]}.git`
   }
-  if (vendorTestRepos !== '') {
-    vendorRepoParams = `--vendor_repos ${vendorTestRepos}`
-  }
-  if (vendorTestBranches !== '') {
-    vendorBranchParams = `--vendor_branches ${vendorTestBranches}`
-  }
-  if (vendorTestDirs !== '') {
-    vendorDirParams = `--vendor_dirs ${vendorTestDirs}`
-  }
-  if (vendorTestShas !== '') {
-    vendorShaParams = `--vendor_shas ${vendorTestShas}`
-  }
+
   if (IS_WINDOWS) {
-    await exec.exec(`bash ./get.sh ${tkgParameters} ${vendorRepoParams} ${vendorBranchParams} ${vendorDirParams} ${vendorShaParams}`)
+    await exec.exec(`bash ./get.sh ${tkgParameters} ${vendorTestParams}`)
   } else {
-    await exec.exec(`./get.sh ${tkgParameters} ${vendorRepoParams} ${vendorBranchParams} ${vendorDirParams} ${vendorShaParams}`)
+    await exec.exec(`./get.sh ${tkgParameters} ${vendorTestParams}`)
   }
 }
 

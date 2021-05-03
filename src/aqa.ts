@@ -15,6 +15,7 @@ async function run(): Promise<void> {
     const vendorTestDirs = core.getInput('vendor_testDirs', {required: false})
     const vendorTestShas = core.getInput('vendor_testShas', {required: false})
 
+    let vendorTestParams = ''
     //  let arch = core.getInput("architecture", { required: false })
     if (
       jdksource !== 'upstream' &&
@@ -42,8 +43,19 @@ async function run(): Promise<void> {
         'Please provide jdkversion if jdksource is github-hosted installed or AdoptOpenJKD/install-jdk installed.'
       )
     }
-
-    await runaqa.runaqaTest(version, jdksource, buildList, target, customTarget, openjdktestRepo, tkgRepo, vendorTestRepos, vendorTestBranches, vendorTestDirs, vendorTestShas)
+    if (vendorTestRepos !== '') {
+      vendorTestParams = `--vendor_repos ${vendorTestRepos}`
+    }
+    if (vendorTestBranches !== '') {
+      vendorTestParams += ` --vendor_branches ${vendorTestBranches}`
+    }
+    if (vendorTestDirs !== '') {
+      vendorTestParams += ` --vendor_dirs ${vendorTestDirs}`
+    }
+    if (vendorTestShas !== '') {
+      vendorTestParams +=  ` --vendor_shas ${vendorTestShas}`
+    }
+    await runaqa.runaqaTest(version, jdksource, buildList, target, customTarget, openjdktestRepo, tkgRepo, vendorTestParams)
   } catch (error) {
     core.setFailed(error.message)
   }
