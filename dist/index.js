@@ -3490,18 +3490,18 @@ function setSpec() {
 }
 function getOpenjdkTestRepo(openjdktestRepo) {
     return __awaiter(this, void 0, void 0, function* () {
-        let repoBranch = ['AdoptOpenJDK/openjdk-tests', 'master'];
-        if (openjdktestRepo !== 'openjdk-tests:master') {
+        let repoBranch = ['adoptium/aqa-tests', 'master'];
+        if (openjdktestRepo !== 'aqa-tests:master') {
             repoBranch = parseRepoBranch(openjdktestRepo);
         }
         yield exec.exec(`git clone --depth 1 -b ${repoBranch[1]} https://github.com/${repoBranch[0]}.git`);
-        process.chdir('openjdk-tests');
+        process.chdir('aqa-tests');
     });
 }
 function runGetSh(tkgRepo, vendorTestRepos, vendorTestBranches, vendorTestDirs, vendorTestShas) {
     return __awaiter(this, void 0, void 0, function* () {
         let tkgParameters = '';
-        let repoBranch = ['AdoptOpenJDK/TKG', 'master'];
+        let repoBranch = ['adoptium/TKG', 'master'];
         let vendorRepoParams = '';
         let vendorBranchParams = '';
         let vendorDirParams = '';

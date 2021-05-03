@@ -1,10 +1,10 @@
 # RunAQA tests
 
-An action to run [AQA tests](https://github.com/AdoptOpenJDK/openjdk-tests) with specific JDK on specific platform
+An action to run [AQA tests](https://github.com/adoptium/aqa-tests) with specific JDK on specific platform
 
 ## Usage
 
-See [action.yml](https://github.com/AdoptOpenJDK/run-aqa/blob/master/action.yml)
+See [action.yml](https://github.com/adoptium/run-aqa/blob/master/action.yml)
 
 ## Default upstream action build JDK: run openjdk test _jdk_math against upstream action build JDK
 
@@ -17,7 +17,7 @@ See [action.yml](https://github.com/AdoptOpenJDK/run-aqa/blob/master/action.yml)
        with:
          version: '8'
     - name: AQA
-      uses: AdoptOpenJDK/run-aqa@v1
+      uses: adoptium/run-aqa@v1
       env:
          TEST_JDK_HOME: ${{ steps.buildOpenj9.outputs.BuildOpenJ9JDK }}
       with: 
@@ -36,7 +36,7 @@ You can also:
       with:
         java-version: '11' # The JDK version to make available on the path.
     - name: AQA
-      uses: AdoptOpenJDK/run-aqa@v1
+      uses: adoptium/run-aqa@v1
       with: 
         version: '11'
         jdksource: 'customized'
@@ -52,7 +52,7 @@ You can also:
         targets: 'JDK_11'
         impl: 'openj9'
     - name: AQA
-      uses: AdoptOpenJDK/run-aqa@v1
+      uses: adoptium/run-aqa@v1
       with: 
         version: '11'
         jdksource: 'customized'
@@ -66,7 +66,7 @@ You can also:
     steps:
     - uses: actions/checkout@v1
     - name: AQA
-      uses: AdoptOpenJDK/run-aqa@v1
+      uses: adoptium/run-aqa@v1
       with: 
         version: '11'
         jdksource: 'github-hosted'
