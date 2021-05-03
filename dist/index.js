@@ -2955,6 +2955,10 @@ function run() {
             const customTarget = core.getInput('custom_target', { required: false });
             const openjdktestRepo = core.getInput('openjdk_testRepo', { required: false });
             const tkgRepo = core.getInput('tkg_Repo', { required: false });
+            const vendorTestRepos = core.getInput('vendor_testRepos', { required: false });
+            const vendorTestBranches = core.getInput('vendor_testBranches', { required: false });
+            const vendorTestDirs = core.getInput('vendor_testDirs', { required: false });
+            const vendorTestShas = core.getInput('vendor_testShas', { required: false });
             //  let arch = core.getInput("architecture", { required: false })
             if (jdksource !== 'upstream' &&
                 jdksource !== 'github-hosted' &&
@@ -2971,7 +2975,7 @@ function run() {
             if (jdksource !== 'upstream' && version.length === 0) {
                 core.setFailed('Please provide jdkversion if jdksource is github-hosted installed or AdoptOpenJKD/install-jdk installed.');
             }
-            yield runaqa.runaqaTest(version, jdksource, buildList, target, customTarget, openjdktestRepo, tkgRepo);
+            yield runaqa.runaqaTest(version, jdksource, buildList, target, customTarget, openjdktestRepo, tkgRepo, vendorTestRepos, vendorTestBranches, vendorTestDirs, vendorTestShas);
         }
         catch (error) {
             core.setFailed(error.message);
@@ -3374,7 +3378,7 @@ if (!tempDirectory) {
     }
     tempDirectory = path.join(baseLocation, 'actions', 'temp');
 }
-function runaqaTest(version, jdksource, buildList, target, customTarget, openjdktestRepo, tkgRepo) {
+function runaqaTest(version, jdksource, buildList, target, customTarget, openjdktestRepo, tkgRepo, vendorTestRepos, vendorTestBranches, vendorTestDirs, vendorTestShas) {
     return __awaiter(this, void 0, void 0, function* () {
         yield installDependencyAndSetup();
         setSpec();
@@ -3382,7 +3386,7 @@ function runaqaTest(version, jdksource, buildList, target, customTarget, openjdk
         if (!('TEST_JDK_HOME' in process.env))
             process.env.TEST_JDK_HOME = getTestJdkHome(version, jdksource);
         yield getOpenjdkTestRepo(openjdktestRepo);
-        yield runGetSh(tkgRepo);
+        yield runGetSh(tkgRepo, vendorTestRepos, vendorTestBranches, vendorTestDirs, vendorTestShas);
         const options = {};
         let myOutput = '';
         options.listeners = {
@@ -3494,19 +3498,35 @@ function getOpenjdkTestRepo(openjdktestRepo) {
         process.chdir('openjdk-tests');
     });
 }
-function runGetSh(tkgRepo) {
+function runGetSh(tkgRepo, vendorTestRepos, vendorTestBranches, vendorTestDirs, vendorTestShas) {
     return __awaiter(this, void 0, void 0, function* () {
         let tkgParameters = '';
         let repoBranch = ['AdoptOpenJDK/TKG', 'master'];
+        let vendorRepoParams = '';
+        let vendorBranchParams = '';
+        let vendorDirParams = '';
+        let vendorShaParams = '';
         if (tkgRepo !== 'TKG:master') {
             repoBranch = parseRepoBranch(tkgRepo);
             tkgParameters = `--tkg_branch ${repoBranch[1]} --tkg_repo https://github.com/${repoBranch[0]}.git`;
         }
+        if (vendorTestRepos !== '') {
+            vendorRepoParams = `--vendor_repos ${vendorTestRepos}`;
+        }
+        if (vendorTestBranches !== '') {
+            vendorBranchParams = `--vendor_branches ${vendorTestBranches}`;
+        }
+        if (vendorTestDirs !== '') {
+            vendorDirParams = `--vendor_dirs ${vendorTestDirs}`;
+        }
+        if (vendorTestShas !== '') {
+            vendorShaParams = `--vendor_shas ${vendorTestShas}`;
+        }
         if (IS_WINDOWS) {
-            yield exec.exec(`bash ./get.sh ${tkgParameters}`);
+            yield exec.exec(`bash ./get.sh ${tkgParameters} ${vendorRepoParams} ${vendorBranchParams} ${vendorDirParams} ${vendorShaParams}`);
         }
         else {
-            yield exec.exec(`./get.sh ${tkgParameters}`);
+            yield exec.exec(`./get.sh ${tkgParameters} ${vendorRepoParams} ${vendorBranchParams} ${vendorDirParams} ${vendorShaParams}`);
         }
     });
 }

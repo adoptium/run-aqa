@@ -10,6 +10,10 @@ async function run(): Promise<void> {
     const customTarget = core.getInput('custom_target', {required: false})
     const openjdktestRepo = core.getInput('openjdk_testRepo', {required: false})
     const tkgRepo = core.getInput('tkg_Repo', {required: false})
+    const vendorTestRepos = core.getInput('vendor_testRepos', {required: false})
+    const vendorTestBranches = core.getInput('vendor_testBranches', {required: false})
+    const vendorTestDirs = core.getInput('vendor_testDirs', {required: false})
+    const vendorTestShas = core.getInput('vendor_testShas', {required: false})
 
     //  let arch = core.getInput("architecture", { required: false })
     if (
@@ -39,7 +43,7 @@ async function run(): Promise<void> {
       )
     }
 
-    await runaqa.runaqaTest(version, jdksource, buildList, target, customTarget, openjdktestRepo, tkgRepo)
+    await runaqa.runaqaTest(version, jdksource, buildList, target, customTarget, openjdktestRepo, tkgRepo, vendorTestRepos, vendorTestBranches, vendorTestDirs, vendorTestShas)
   } catch (error) {
     core.setFailed(error.message)
   }

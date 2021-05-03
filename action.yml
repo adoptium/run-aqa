@@ -2,13 +2,13 @@ name: 'Running AQA test'
 description: 'Running AQA test'
 author: 'Sophia Guo'
 inputs:
-  jdksource:      # AdoptOpenJDK/install-jdk , github-hosted environment  , upstream
+  jdksource:      # AdoptOpenJDK/install-jdk, github-hosted environment, upstream
     description: 'github-hosted default or customized'
     default: 'upstream'
   version:              # jdk version
     description: 'testing jdk version (Required when jdksource is github-hosted or install-jdk.)'
     required: false
-  build_list:           # test catagory
+  build_list:           # test category
     description: 
     default: 'openjdk'
   target:              # test
@@ -25,6 +25,18 @@ inputs:
     description: 'TKG Repo'
     required: false
     default: 'TKG:master'
+  vendor_testRepos:
+      description: 'Comma-separated list of vendor repositories'
+      required: false
+  vendor_testBranches:
+      description: 'Comma-separated list of vendor branches'
+      required: false
+  vendor_testDirs:
+      description: 'Comma-separated list of vendor directories'
+      required: false
+  vendor_testShas:
+      description: 'Comma-separated list of vendor SHAs'
+      required: false
 runs:
   using: 'node12'
   main: 'dist/index.js'
