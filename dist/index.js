@@ -3383,6 +3383,18 @@ function runaqaTest(version, jdksource, buildList, target, customTarget, openjdk
             process.env.TEST_JDK_HOME = getTestJdkHome(version, jdksource);
         yield getOpenjdkTestRepo(openjdktestRepo);
         yield runGetSh(tkgRepo);
+        //Get Dependencies, using /*zip*/dependents.zip to avoid loop every available files
+        let dependents = yield tc.downloadTool('https://ci.adoptopenjdk.net/view/all/job/test.getDependency/lastSuccessfulBuild/artifact//*zip*/dependents.zip');
+        // Test.dependency only has one level of archive directory, none of actions toolkit support mv files by regex. Using 7zip discards the directory directly
+        yield exec.exec(`7z e ${dependents} -o${process.env.GITHUB_WORKSPACE}/openjdk-tests/TKG/lib`);
+        if (buildList.includes('system')) {
+            dependents = yield tc.downloadTool('https://ci.adoptopenjdk.net/view/all/job/systemtest.getDependency/lastSuccessfulBuild/artifact/*zip*/dependents.zip');
+            // System.dependency has different levels of archive structures archive/systemtest_prereqs/*.*
+            // None of io.mv, io.cp and exec.exec can mv directories as expected (mv archive/ ./). Move subfolder systemtest_prereqs instead.
+            const dependentPath = yield tc.extractZip(dependents, `${process.env.GITHUB_WORKSPACE}/openjdk-tests`);
+            yield io.mv(`${dependentPath}/archive/systemtest_prereqs`, `${process.env.GITHUB_WORKSPACE}/openjdk-tests`);
+            yield io.rmRF(`${dependentPath}/archive`);
+        }
         const options = {};
         let myOutput = '';
         options.listeners = {
