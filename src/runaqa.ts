@@ -1,4 +1,3 @@
-/* eslint-disable prefer-template */
 import * as exec from '@actions/exec'
 import * as core from '@actions/core'
 import * as io from '@actions/io'
@@ -31,27 +30,41 @@ export async function runaqaTest(
   target: string,
   customTarget: string,
   openjdktestRepo: string,
+  openj9Repo: string,
   tkgRepo: string
 ): Promise<void> {
   await installDependencyAndSetup()
   setSpec()
   process.env.BUILD_LIST = buildList
-  if (!('TEST_JDK_HOME' in process.env)) process.env.TEST_JDK_HOME = getTestJdkHome(version, jdksource)
+  if (!('TEST_JDK_HOME' in process.env))
+    process.env.TEST_JDK_HOME = getTestJdkHome(version, jdksource)
 
   await getOpenjdkTestRepo(openjdktestRepo)
-  await runGetSh(tkgRepo)
-  
+  await runGetSh(tkgRepo, openj9Repo)
+
   //Get Dependencies, using /*zip*/dependents.zip to avoid loop every available files
-  let dependents = await tc.downloadTool('https://ci.adoptopenjdk.net/view/all/job/test.getDependency/lastSuccessfulBuild/artifact//*zip*/dependents.zip');
+  let dependents = await tc.downloadTool(
+    'https://ci.adoptopenjdk.net/view/all/job/test.getDependency/lastSuccessfulBuild/artifact//*zip*/dependents.zip'
+  )
   // Test.dependency only has one level of archive directory, none of actions toolkit support mv files by regex. Using 7zip discards the directory directly
-  await exec.exec(`7z e ${dependents} -o${process.env.GITHUB_WORKSPACE}/openjdk-tests/TKG/lib`)
-  
+  await exec.exec(
+    `7z e ${dependents} -o${process.env.GITHUB_WORKSPACE}/openjdk-tests/TKG/lib`
+  )
+
   if (buildList.includes('system')) {
-    dependents = await tc.downloadTool('https://ci.adoptopenjdk.net/view/all/job/systemtest.getDependency/lastSuccessfulBuild/artifact/*zip*/dependents.zip');
+    dependents = await tc.downloadTool(
+      'https://ci.adoptopenjdk.net/view/all/job/systemtest.getDependency/lastSuccessfulBuild/artifact/*zip*/dependents.zip'
+    )
     // System.dependency has different levels of archive structures archive/systemtest_prereqs/*.*
     // None of io.mv, io.cp and exec.exec can mv directories as expected (mv archive/ ./). Move subfolder systemtest_prereqs instead.
-    const dependentPath = await tc.extractZip(dependents, `${process.env.GITHUB_WORKSPACE}/openjdk-tests`)
-    await io.mv(`${dependentPath}/archive/systemtest_prereqs`, `${process.env.GITHUB_WORKSPACE}/openjdk-tests`)
+    const dependentPath = await tc.extractZip(
+      dependents,
+      `${process.env.GITHUB_WORKSPACE}/openjdk-tests`
+    )
+    await io.mv(
+      `${dependentPath}/archive/systemtest_prereqs`,
+      `${process.env.GITHUB_WORKSPACE}/openjdk-tests`
+    )
     await io.rmRF(`${dependentPath}/archive`)
   }
 
@@ -66,7 +79,9 @@ export async function runaqaTest(
   try {
     await exec.exec('make compile')
     if (target.includes('custom') && customTarget !== '') {
-      const customOption = `${target.substr(1).toUpperCase()}_TARGET=${customTarget}`
+      const customOption = `${target
+        .substr(1)
+        .toUpperCase()}_TARGET=${customTarget}`
       await exec.exec('make', [`${target}`, `${customOption}`], options)
     } else {
       await exec.exec('make', [`${target}`], options)
@@ -105,20 +120,30 @@ async function installDependencyAndSetup(): Promise<void> {
         core.info(`if the cygwin exist?`)
         await io.mkdirP('C:\\cygwin64')
         await io.mkdirP('C:\\cygwin_packages')
-        await tc.downloadTool('https://cygwin.com/setup-x86_64.exe', 'C:\\temp\\cygwin.exe')
+        await tc.downloadTool(
+          'https://cygwin.com/setup-x86_64.exe',
+          'C:\\temp\\cygwin.exe'
+        )
         await exec.exec(`C:\\temp\\cygwin.exe  --packages wget,bsdtar,rsync,gnupg,git,autoconf,make,gcc-core,mingw64-x86_64-gcc-core,unzip,zip,cpio,curl,grep,perl --quiet-mode --download --local-install
         --delete-orphans --site  https://mirrors.kernel.org/sourceware/cygwin/
         --local-package-dir "C:\\cygwin_packages"
         --root "C:\\cygwin64"`)
-        await exec.exec(`C:/cygwin64/bin/git config --system core.autocrlf false`)
+        await exec.exec(
+          `C:/cygwin64/bin/git config --system core.autocrlf false`
+        )
         core.addPath(`C:\\cygwin64\\bin`)
       }
     } catch (error) {
       core.warning(error.message)
     }
-    const antContribFile = await tc.downloadTool(`https://sourceforge.net/projects/ant-contrib/files/ant-contrib/ant-contrib-1.0b2/ant-contrib-1.0b2-bin.zip/download`)
+    const antContribFile = await tc.downloadTool(
+      `https://sourceforge.net/projects/ant-contrib/files/ant-contrib/ant-contrib-1.0b2/ant-contrib-1.0b2-bin.zip/download`
+    )
     await tc.extractZip(`${antContribFile}`, `${tempDirectory}`)
-    await io.cp(`${tempDirectory}/ant-contrib/lib/ant-contrib.jar`,`${process.env.ANT_HOME}\\lib`)
+    await io.cp(
+      `${tempDirectory}/ant-contrib/lib/ant-contrib.jar`,
+      `${process.env.ANT_HOME}\\lib`
+    )
   } else if (process.platform === 'darwin') {
     await exec.exec('brew install ant-contrib')
     await exec.exec('sudo sysctl -w kern.sysv.shmall=655360')
@@ -130,7 +155,9 @@ async function installDependencyAndSetup(): Promise<void> {
     if ('RUNNER_USER' in process.env) {
       process.env['LOGNAME'] = process.env['RUNNER_USER']
     } else {
-      core.warning('RUNNER_USER is not the GitHub Actions environment variables shell script. Container is configured differently. Please check the updated lists of environment variables.')
+      core.warning(
+        'RUNNER_USER is not the GitHub Actions environment variables shell script. Container is configured differently. Please check the updated lists of environment variables.'
+      )
     }
 
     //disable apport
@@ -159,18 +186,22 @@ async function getOpenjdkTestRepo(openjdktestRepo: string): Promise<void> {
   process.chdir('openjdk-tests')
 }
 
-async function runGetSh(tkgRepo: string): Promise<void> {
-  let tkgParameters = ''
-  let repoBranch = ['AdoptOpenJDK/TKG', 'master']
+async function runGetSh(tkgRepo: string, openj9Repo: string): Promise<void> {
+  let parameters = ''
   if (tkgRepo !== 'TKG:master') {
-    repoBranch = parseRepoBranch(tkgRepo)
-    tkgParameters = `--tkg_branch ${repoBranch[1]} --tkg_repo https://github.com/${repoBranch[0]}.git`
+    const repoBranch = parseRepoBranch(tkgRepo)
+    parameters += `--tkg_branch ${repoBranch[1]} --tkg_repo https://github.com/${repoBranch[0]}.git`
+  }
+
+  if (openj9Repo !== 'openj9:master') {
+    const repoBranch = parseRepoBranch(openj9Repo)
+    parameters += ` --openj9_branch ${repoBranch[1]} --openj9_repo https://github.com/${repoBranch[0]}.git`
   }
 
   if (IS_WINDOWS) {
-    await exec.exec(`bash ./get.sh ${tkgParameters}`)
+    await exec.exec(`bash ./get.sh ${parameters}`)
   } else {
-    await exec.exec(`./get.sh ${tkgParameters}`)
+    await exec.exec(`./get.sh ${parameters}`)
   }
 }
 

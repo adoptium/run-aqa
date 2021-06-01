@@ -2954,6 +2954,7 @@ function run() {
             const target = core.getInput('target', { required: false });
             const customTarget = core.getInput('custom_target', { required: false });
             const openjdktestRepo = core.getInput('openjdk_testRepo', { required: false });
+            const openj9Repo = core.getInput('openj9_repo', { required: false });
             const tkgRepo = core.getInput('tkg_Repo', { required: false });
             //  let arch = core.getInput("architecture", { required: false })
             if (jdksource !== 'upstream' &&
@@ -2971,7 +2972,7 @@ function run() {
             if (jdksource !== 'upstream' && version.length === 0) {
                 core.setFailed('Please provide jdkversion if jdksource is github-hosted installed or AdoptOpenJKD/install-jdk installed.');
             }
-            yield runaqa.runaqaTest(version, jdksource, buildList, target, customTarget, openjdktestRepo, tkgRepo);
+            yield runaqa.runaqaTest(version, jdksource, buildList, target, customTarget, openjdktestRepo, openj9Repo, tkgRepo);
         }
         catch (error) {
             core.setFailed(error.message);
@@ -3351,7 +3352,6 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-/* eslint-disable prefer-template */
 const exec = __importStar(__webpack_require__(986));
 const core = __importStar(__webpack_require__(470));
 const io = __importStar(__webpack_require__(1));
@@ -3374,7 +3374,7 @@ if (!tempDirectory) {
     }
     tempDirectory = path.join(baseLocation, 'actions', 'temp');
 }
-function runaqaTest(version, jdksource, buildList, target, customTarget, openjdktestRepo, tkgRepo) {
+function runaqaTest(version, jdksource, buildList, target, customTarget, openjdktestRepo, openj9Repo, tkgRepo) {
     return __awaiter(this, void 0, void 0, function* () {
         yield installDependencyAndSetup();
         setSpec();
@@ -3382,7 +3382,7 @@ function runaqaTest(version, jdksource, buildList, target, customTarget, openjdk
         if (!('TEST_JDK_HOME' in process.env))
             process.env.TEST_JDK_HOME = getTestJdkHome(version, jdksource);
         yield getOpenjdkTestRepo(openjdktestRepo);
-        yield runGetSh(tkgRepo);
+        yield runGetSh(tkgRepo, openj9Repo);
         //Get Dependencies, using /*zip*/dependents.zip to avoid loop every available files
         let dependents = yield tc.downloadTool('https://ci.adoptopenjdk.net/view/all/job/test.getDependency/lastSuccessfulBuild/artifact//*zip*/dependents.zip');
         // Test.dependency only has one level of archive directory, none of actions toolkit support mv files by regex. Using 7zip discards the directory directly
@@ -3406,7 +3406,9 @@ function runaqaTest(version, jdksource, buildList, target, customTarget, openjdk
         try {
             yield exec.exec('make compile');
             if (target.includes('custom') && customTarget !== '') {
-                const customOption = `${target.substr(1).toUpperCase()}_TARGET=${customTarget}`;
+                const customOption = `${target
+                    .substr(1)
+                    .toUpperCase()}_TARGET=${customTarget}`;
                 yield exec.exec('make', [`${target}`, `${customOption}`], options);
             }
             else {
@@ -3506,19 +3508,22 @@ function getOpenjdkTestRepo(openjdktestRepo) {
         process.chdir('openjdk-tests');
     });
 }
-function runGetSh(tkgRepo) {
+function runGetSh(tkgRepo, openj9Repo) {
     return __awaiter(this, void 0, void 0, function* () {
-        let tkgParameters = '';
-        let repoBranch = ['AdoptOpenJDK/TKG', 'master'];
+        let parameters = '';
         if (tkgRepo !== 'TKG:master') {
-            repoBranch = parseRepoBranch(tkgRepo);
-            tkgParameters = `--tkg_branch ${repoBranch[1]} --tkg_repo https://github.com/${repoBranch[0]}.git`;
+            const repoBranch = parseRepoBranch(tkgRepo);
+            parameters += `--tkg_branch ${repoBranch[1]} --tkg_repo https://github.com/${repoBranch[0]}.git`;
+        }
+        if (openj9Repo !== 'openj9:master') {
+            const repoBranch = parseRepoBranch(openj9Repo);
+            parameters += ` --openj9_branch ${repoBranch[1]} --openj9_repo https://github.com/${repoBranch[0]}.git`;
         }
         if (IS_WINDOWS) {
-            yield exec.exec(`bash ./get.sh ${tkgParameters}`);
+            yield exec.exec(`bash ./get.sh ${parameters}`);
         }
         else {
-            yield exec.exec(`./get.sh ${tkgParameters}`);
+            yield exec.exec(`./get.sh ${parameters}`);
         }
     });
 }
