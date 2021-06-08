@@ -93,8 +93,8 @@ You can also:
 | target | _jdk_math |
 | custom_target |  |
 | jdksource | upstream |
-| openjdk_testRepo | aqa-tests:master |
-| tkg_Repo | TKG:master |
+| aqa-testsRepo |  |
+| tkg_Repo |  |
 
 ### version
 The Java version that tests are running against (Supported values are: 8, 9, 10, 11, 12, 13, ...)
