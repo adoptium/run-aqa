@@ -9,6 +9,7 @@ async function run(): Promise<void> {
     const target = core.getInput('target', {required: false})
     const customTarget = core.getInput('custom_target', {required: false})
     const openjdktestRepo = core.getInput('openjdk_testRepo', {required: false})
+    const openj9Repo = core.getInput('openj9_repo', {required: false})
     const tkgRepo = core.getInput('tkg_Repo', {required: false})
 
     //  let arch = core.getInput("architecture", { required: false })
@@ -39,7 +40,16 @@ async function run(): Promise<void> {
       )
     }
 
-    await runaqa.runaqaTest(version, jdksource, buildList, target, customTarget, openjdktestRepo, tkgRepo)
+    await runaqa.runaqaTest(
+      version,
+      jdksource,
+      buildList,
+      target,
+      customTarget,
+      openjdktestRepo,
+      openj9Repo,
+      tkgRepo
+    )
   } catch (error) {
     core.setFailed(error.message)
   }
