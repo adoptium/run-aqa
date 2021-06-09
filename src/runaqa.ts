@@ -41,6 +41,20 @@ export async function runaqaTest(
 
   await getOpenjdkTestRepo(openjdktestRepo)
   await runGetSh(tkgRepo, vendorTestParams)
+  
+  //Get Dependencies, using /*zip*/dependents.zip to avoid loop every available files
+  let dependents = await tc.downloadTool('https://ci.adoptopenjdk.net/view/all/job/test.getDependency/lastSuccessfulBuild/artifact//*zip*/dependents.zip');
+  // Test.dependency only has one level of archive directory, none of actions toolkit support mv files by regex. Using 7zip discards the directory directly
+  await exec.exec(`7z e ${dependents} -o${process.env.GITHUB_WORKSPACE}/openjdk-tests/TKG/lib`)
+  
+  if (buildList.includes('system')) {
+    dependents = await tc.downloadTool('https://ci.adoptopenjdk.net/view/all/job/systemtest.getDependency/lastSuccessfulBuild/artifact/*zip*/dependents.zip');
+    // System.dependency has different levels of archive structures archive/systemtest_prereqs/*.*
+    // None of io.mv, io.cp and exec.exec can mv directories as expected (mv archive/ ./). Move subfolder systemtest_prereqs instead.
+    const dependentPath = await tc.extractZip(dependents, `${process.env.GITHUB_WORKSPACE}/openjdk-tests`)
+    await io.mv(`${dependentPath}/archive/systemtest_prereqs`, `${process.env.GITHUB_WORKSPACE}/openjdk-tests`)
+    await io.rmRF(`${dependentPath}/archive`)
+  }
 
   const options: ExecOptions = {}
   let myOutput = ''
