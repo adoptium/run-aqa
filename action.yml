@@ -21,6 +21,10 @@ inputs:
     description: 'aqa-tests Repo'
     required: false
     default: 'aqa-tests:master'
+  openj9_repo:
+    description: 'openj9 Repo'
+    required: false
+    default: 'openj9:master'
   tkg_Repo:
     description: 'TKG Repo'
     required: false
