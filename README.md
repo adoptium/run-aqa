@@ -93,7 +93,7 @@ You can also:
 | target | _jdk_math |
 | custom_target |  |
 | jdksource | upstream |
-| openjdk_testRepo | openjdk-tests:master |
+| openjdk_testRepo | aqa-tests:master |
 | tkg_Repo | TKG:master |
 
 ### version
@@ -115,8 +115,8 @@ THe source of test against JDK. Default is `upstream`. Supported value is [`upst
   - install-jdk: JDK installed by [AdoptOpenJDK/install-jdk](https://github.com/AdoptOpenJDK/install-jdk) | [actions/setup-java](https://github.com/actions/setup-java)
   - github-hosted : pre-installed JDK on github-hosted environment
 
-### openjdk_testRepo
-Openjdk-tests git repo, that holds the definitions for the AQA test suite. Parameter can be set to use developer's personal repo. 
+### aqa_testRepo
+aqa-tests git repo, that holds the definitions for the AQA test suite. Parameter can be set to use developer's personal repo. 
 
 ### tkg_Repo
 TKG git repo, the underlying framework for the AQA test suite. Parameter can be set to use developer's personal repo.

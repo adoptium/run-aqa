@@ -49,7 +49,7 @@ export async function runaqaTest(
   )
   // Test.dependency only has one level of archive directory, none of actions toolkit support mv files by regex. Using 7zip discards the directory directly
   await exec.exec(
-    `7z e ${dependents} -o${process.env.GITHUB_WORKSPACE}/openjdk-tests/TKG/lib`
+    `7z e ${dependents} -o${process.env.GITHUB_WORKSPACE}/aqa-tests/TKG/lib`
   )
 
   if (buildList.includes('system')) {
@@ -60,11 +60,11 @@ export async function runaqaTest(
     // None of io.mv, io.cp and exec.exec can mv directories as expected (mv archive/ ./). Move subfolder systemtest_prereqs instead.
     const dependentPath = await tc.extractZip(
       dependents,
-      `${process.env.GITHUB_WORKSPACE}/openjdk-tests`
+      `${process.env.GITHUB_WORKSPACE}/`
     )
     await io.mv(
       `${dependentPath}/archive/systemtest_prereqs`,
-      `${process.env.GITHUB_WORKSPACE}/openjdk-tests`
+      `${process.env.GITHUB_WORKSPACE}/aqa-tests`
     )
     await io.rmRF(`${dependentPath}/archive`)
   }
