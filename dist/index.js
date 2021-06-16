@@ -2956,6 +2956,11 @@ function run() {
             const openjdktestRepo = core.getInput('openjdk_testRepo', { required: false });
             const openj9Repo = core.getInput('openj9_repo', { required: false });
             const tkgRepo = core.getInput('tkg_Repo', { required: false });
+            const vendorTestRepos = core.getInput('vendor_testRepos', { required: false });
+            const vendorTestBranches = core.getInput('vendor_testBranches', { required: false });
+            const vendorTestDirs = core.getInput('vendor_testDirs', { required: false });
+            const vendorTestShas = core.getInput('vendor_testShas', { required: false });
+            let vendorTestParams = '';
             //  let arch = core.getInput("architecture", { required: false })
             if (jdksource !== 'upstream' &&
                 jdksource !== 'github-hosted' &&
@@ -2972,7 +2977,19 @@ function run() {
             if (jdksource !== 'upstream' && version.length === 0) {
                 core.setFailed('Please provide jdkversion if jdksource is github-hosted installed or AdoptOpenJKD/install-jdk installed.');
             }
-            yield runaqa.runaqaTest(version, jdksource, buildList, target, customTarget, openjdktestRepo, openj9Repo, tkgRepo);
+            if (vendorTestRepos !== '') {
+                vendorTestParams = `--vendor_repos ${vendorTestRepos}`;
+            }
+            if (vendorTestBranches !== '') {
+                vendorTestParams += ` --vendor_branches ${vendorTestBranches}`;
+            }
+            if (vendorTestDirs !== '') {
+                vendorTestParams += ` --vendor_dirs ${vendorTestDirs}`;
+            }
+            if (vendorTestShas !== '') {
+                vendorTestParams += ` --vendor_shas ${vendorTestShas}`;
+            }
+            yield runaqa.runaqaTest(version, jdksource, buildList, target, customTarget, openjdktestRepo, openj9Repo, tkgRepo, vendorTestParams);
         }
         catch (error) {
             core.setFailed(error.message);
@@ -3374,7 +3391,7 @@ if (!tempDirectory) {
     }
     tempDirectory = path.join(baseLocation, 'actions', 'temp');
 }
-function runaqaTest(version, jdksource, buildList, target, customTarget, openjdktestRepo, openj9Repo, tkgRepo) {
+function runaqaTest(version, jdksource, buildList, target, customTarget, openjdktestRepo, openj9Repo, tkgRepo, vendorTestParams) {
     return __awaiter(this, void 0, void 0, function* () {
         yield installDependencyAndSetup();
         setSpec();
@@ -3382,17 +3399,17 @@ function runaqaTest(version, jdksource, buildList, target, customTarget, openjdk
         if (!('TEST_JDK_HOME' in process.env))
             process.env.TEST_JDK_HOME = getTestJdkHome(version, jdksource);
         yield getOpenjdkTestRepo(openjdktestRepo);
-        yield runGetSh(tkgRepo, openj9Repo);
+        yield runGetSh(tkgRepo, openj9Repo, vendorTestParams);
         //Get Dependencies, using /*zip*/dependents.zip to avoid loop every available files
         let dependents = yield tc.downloadTool('https://ci.adoptopenjdk.net/view/all/job/test.getDependency/lastSuccessfulBuild/artifact//*zip*/dependents.zip');
         // Test.dependency only has one level of archive directory, none of actions toolkit support mv files by regex. Using 7zip discards the directory directly
-        yield exec.exec(`7z e ${dependents} -o${process.env.GITHUB_WORKSPACE}/openjdk-tests/TKG/lib`);
+        yield exec.exec(`7z e ${dependents} -o${process.env.GITHUB_WORKSPACE}/aqa-tests/TKG/lib`);
         if (buildList.includes('system')) {
             dependents = yield tc.downloadTool('https://ci.adoptopenjdk.net/view/all/job/systemtest.getDependency/lastSuccessfulBuild/artifact/*zip*/dependents.zip');
             // System.dependency has different levels of archive structures archive/systemtest_prereqs/*.*
             // None of io.mv, io.cp and exec.exec can mv directories as expected (mv archive/ ./). Move subfolder systemtest_prereqs instead.
-            const dependentPath = yield tc.extractZip(dependents, `${process.env.GITHUB_WORKSPACE}/openjdk-tests`);
-            yield io.mv(`${dependentPath}/archive/systemtest_prereqs`, `${process.env.GITHUB_WORKSPACE}/openjdk-tests`);
+            const dependentPath = yield tc.extractZip(dependents, `${process.env.GITHUB_WORKSPACE}/`);
+            yield io.mv(`${dependentPath}/archive/systemtest_prereqs`, `${process.env.GITHUB_WORKSPACE}/aqa-tests`);
             yield io.rmRF(`${dependentPath}/archive`);
         }
         const options = {};
@@ -3500,15 +3517,15 @@ function setSpec() {
 }
 function getOpenjdkTestRepo(openjdktestRepo) {
     return __awaiter(this, void 0, void 0, function* () {
-        let repoBranch = ['AdoptOpenJDK/openjdk-tests', 'master'];
-        if (openjdktestRepo !== 'openjdk-tests:master') {
+        let repoBranch = ['adoptium/aqa-tests', 'master'];
+        if (openjdktestRepo !== 'aqa-tests:master') {
             repoBranch = parseRepoBranch(openjdktestRepo);
         }
         yield exec.exec(`git clone --depth 1 -b ${repoBranch[1]} https://github.com/${repoBranch[0]}.git`);
-        process.chdir('openjdk-tests');
+        process.chdir('aqa-tests');
     });
 }
-function runGetSh(tkgRepo, openj9Repo) {
+function runGetSh(tkgRepo, openj9Repo, vendorTestParams) {
     return __awaiter(this, void 0, void 0, function* () {
         let parameters = '';
         if (tkgRepo !== 'TKG:master') {
@@ -3520,10 +3537,10 @@ function runGetSh(tkgRepo, openj9Repo) {
             parameters += ` --openj9_branch ${repoBranch[1]} --openj9_repo https://github.com/${repoBranch[0]}.git`;
         }
         if (IS_WINDOWS) {
-            yield exec.exec(`bash ./get.sh ${parameters}`);
+            yield exec.exec(`bash ./get.sh ${parameters} ${vendorTestParams}`);
         }
         else {
-            yield exec.exec(`./get.sh ${parameters}`);
+            yield exec.exec(`./get.sh ${parameters} ${vendorTestParams}`);
         }
     });
 }

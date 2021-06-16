@@ -31,7 +31,8 @@ export async function runaqaTest(
   customTarget: string,
   openjdktestRepo: string,
   openj9Repo: string,
-  tkgRepo: string
+  tkgRepo: string,
+  vendorTestParams: string
 ): Promise<void> {
   await installDependencyAndSetup()
   setSpec()
@@ -40,7 +41,7 @@ export async function runaqaTest(
     process.env.TEST_JDK_HOME = getTestJdkHome(version, jdksource)
 
   await getOpenjdkTestRepo(openjdktestRepo)
-  await runGetSh(tkgRepo, openj9Repo)
+  await runGetSh(tkgRepo, openj9Repo, vendorTestParams)
 
   //Get Dependencies, using /*zip*/dependents.zip to avoid loop every available files
   let dependents = await tc.downloadTool(
@@ -48,7 +49,7 @@ export async function runaqaTest(
   )
   // Test.dependency only has one level of archive directory, none of actions toolkit support mv files by regex. Using 7zip discards the directory directly
   await exec.exec(
-    `7z e ${dependents} -o${process.env.GITHUB_WORKSPACE}/openjdk-tests/TKG/lib`
+    `7z e ${dependents} -o${process.env.GITHUB_WORKSPACE}/aqa-tests/TKG/lib`
   )
 
   if (buildList.includes('system')) {
@@ -59,11 +60,11 @@ export async function runaqaTest(
     // None of io.mv, io.cp and exec.exec can mv directories as expected (mv archive/ ./). Move subfolder systemtest_prereqs instead.
     const dependentPath = await tc.extractZip(
       dependents,
-      `${process.env.GITHUB_WORKSPACE}/openjdk-tests`
+      `${process.env.GITHUB_WORKSPACE}/`
     )
     await io.mv(
       `${dependentPath}/archive/systemtest_prereqs`,
-      `${process.env.GITHUB_WORKSPACE}/openjdk-tests`
+      `${process.env.GITHUB_WORKSPACE}/aqa-tests`
     )
     await io.rmRF(`${dependentPath}/archive`)
   }
@@ -176,17 +177,17 @@ function setSpec(): void {
 }
 
 async function getOpenjdkTestRepo(openjdktestRepo: string): Promise<void> {
-  let repoBranch = ['AdoptOpenJDK/openjdk-tests', 'master']
-  if (openjdktestRepo !== 'openjdk-tests:master') {
+  let repoBranch = ['adoptium/aqa-tests', 'master']
+  if (openjdktestRepo !== 'aqa-tests:master') {
     repoBranch = parseRepoBranch(openjdktestRepo)
   }
   await exec.exec(
     `git clone --depth 1 -b ${repoBranch[1]} https://github.com/${repoBranch[0]}.git`
   )
-  process.chdir('openjdk-tests')
+  process.chdir('aqa-tests')
 }
 
-async function runGetSh(tkgRepo: string, openj9Repo: string): Promise<void> {
+async function runGetSh(tkgRepo: string, openj9Repo: string, vendorTestParams: string): Promise<void> {
   let parameters = ''
   if (tkgRepo !== 'TKG:master') {
     const repoBranch = parseRepoBranch(tkgRepo)
@@ -199,9 +200,9 @@ async function runGetSh(tkgRepo: string, openj9Repo: string): Promise<void> {
   }
 
   if (IS_WINDOWS) {
-    await exec.exec(`bash ./get.sh ${parameters}`)
+    await exec.exec(`bash ./get.sh ${parameters} ${vendorTestParams}`)
   } else {
-    await exec.exec(`./get.sh ${parameters}`)
+    await exec.exec(`./get.sh ${parameters} ${vendorTestParams}`)
   }
 }
 
