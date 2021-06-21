@@ -103,9 +103,9 @@ export async function runaqaTest(
 
 function getTestJdkHome(version: string, jdksource: string): string {
   // Try JAVA_HOME first and then fall back to GITHUB actions default location
-  let javaHome = process.env['JAVA_HOME'] as string
+  let javaHome = process.env[`JAVA_HOME_${version}_X64`] as string
   if (javaHome === undefined) {
-    javaHome = process.env[`JAVA_HOME_${version}_X64`] as string
+    javaHome = process.env['JAVA_HOME'] as string
   }
   if (jdksource === 'install-jdk') {
     // work with AdoptOpenJDK/install-sdk
@@ -118,6 +118,9 @@ function getTestJdkHome(version: string, jdksource: string): string {
   // Remove spaces in Windows path and replace with a short name path, e.g. 'C:/Program Files/***' ->C:/Progra~1/***
   if (IS_WINDOWS && jdksource === 'github-hosted') {
     javaHome = javaHome.replace(/Program Files/g, 'Progra~1')
+  }
+  if (javaHome === undefined) {
+    core.error('JDK could not be found')
   }
   return javaHome
 }
@@ -167,10 +170,15 @@ async function installDependencyAndSetup(): Promise<void> {
     } else if (fs.existsSync('/usr/bin/yum')) {
       // RPM Based
       await exec.exec('sudo yum update -y')
-      await exec.exec(
-        'sudo yum install ant-contrib rh-java-common-ant p7zip -y'
+      await exec.exec('sudo yum install p7zip -y')
+      const antContribFile = await tc.downloadTool(
+        `https://sourceforge.net/projects/ant-contrib/files/ant-contrib/ant-contrib-1.0b2/ant-contrib-1.0b2-bin.zip/download`
       )
-      core.addPath('/opt/rh/rh-java-common/root/usr/share/ant/bin')
+      await tc.extractZip(`${antContribFile}`, `${tempDirectory}`)
+      await io.cp(
+        `${tempDirectory}/ant-contrib/lib/ant-contrib.jar`,
+        `${process.env.ANT_HOME}\\lib`
+      )
     } else if (fs.existsSync('/sbin/apk')) {
       // Alpine Based
       await exec.exec('apk update')

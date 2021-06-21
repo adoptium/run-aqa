@@ -3449,9 +3449,9 @@ function runaqaTest(version, jdksource, buildList, target, customTarget, openjdk
 exports.runaqaTest = runaqaTest;
 function getTestJdkHome(version, jdksource) {
     // Try JAVA_HOME first and then fall back to GITHUB actions default location
-    let javaHome = process.env['JAVA_HOME'];
+    let javaHome = process.env[`JAVA_HOME_${version}_X64`];
     if (javaHome === undefined) {
-        javaHome = process.env[`JAVA_HOME_${version}_X64`];
+        javaHome = process.env['JAVA_HOME'];
     }
     if (jdksource === 'install-jdk') {
         // work with AdoptOpenJDK/install-sdk
@@ -3465,6 +3465,9 @@ function getTestJdkHome(version, jdksource) {
     // Remove spaces in Windows path and replace with a short name path, e.g. 'C:/Program Files/***' ->C:/Progra~1/***
     if (IS_WINDOWS && jdksource === 'github-hosted') {
         javaHome = javaHome.replace(/Program Files/g, 'Progra~1');
+    }
+    if (javaHome === undefined) {
+        core.error('JDK could not be found');
     }
     return javaHome;
 }
@@ -3508,8 +3511,10 @@ function installDependencyAndSetup() {
             else if (fs.existsSync('/usr/bin/yum')) {
                 // RPM Based
                 yield exec.exec('sudo yum update -y');
-                yield exec.exec('sudo yum install ant-contrib rh-java-common-ant p7zip -y');
-                core.addPath('/opt/rh/rh-java-common/root/usr/share/ant/bin');
+                yield exec.exec('sudo yum install p7zip -y');
+                const antContribFile = yield tc.downloadTool(`https://sourceforge.net/projects/ant-contrib/files/ant-contrib/ant-contrib-1.0b2/ant-contrib-1.0b2-bin.zip/download`);
+                yield tc.extractZip(`${antContribFile}`, `${tempDirectory}`);
+                yield io.cp(`${tempDirectory}/ant-contrib/lib/ant-contrib.jar`, `${process.env.ANT_HOME}\\lib`);
             }
             else if (fs.existsSync('/sbin/apk')) {
                 // Alpine Based
