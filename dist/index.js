@@ -3404,8 +3404,12 @@ function runaqaTest(version, jdksource, buildList, target, customTarget, openjdk
         yield runGetSh(tkgRepo, openj9Repo, vendorTestParams);
         //Get Dependencies, using /*zip*/dependents.zip to avoid loop every available files
         let dependents = yield tc.downloadTool('https://ci.adoptopenjdk.net/view/all/job/test.getDependency/lastSuccessfulBuild/artifact//*zip*/dependents.zip');
+        let sevenzexe = '7z';
+        if (fs.existsSync('/usr/bin/yum')) {
+            sevenzexe = '7za';
+        }
         // Test.dependency only has one level of archive directory, none of actions toolkit support mv files by regex. Using 7zip discards the directory directly
-        yield exec.exec(`7z e ${dependents} -o${process.env.GITHUB_WORKSPACE}/aqa-tests/TKG/lib`);
+        yield exec.exec(`${sevenzexe} e ${dependents} -o${process.env.GITHUB_WORKSPACE}/aqa-tests/TKG/lib`);
         if (buildList.includes('system')) {
             dependents = yield tc.downloadTool('https://ci.adoptopenjdk.net/view/all/job/systemtest.getDependency/lastSuccessfulBuild/artifact/*zip*/dependents.zip');
             // System.dependency has different levels of archive structures archive/systemtest_prereqs/*.*
@@ -3444,7 +3448,11 @@ function runaqaTest(version, jdksource, buildList, target, customTarget, openjdk
 }
 exports.runaqaTest = runaqaTest;
 function getTestJdkHome(version, jdksource) {
-    let javaHome = process.env[`JAVA_HOME_${version}_X64`];
+    // Try JAVA_HOME first and then fall back to GITHUB actions default location
+    let javaHome = process.env['JAVA_HOME'];
+    if (javaHome === undefined) {
+        javaHome = process.env[`JAVA_HOME_${version}_X64`];
+    }
     if (jdksource === 'install-jdk') {
         // work with AdoptOpenJDK/install-sdk
         if (`JDK_${version}` in process.env) {
@@ -3500,7 +3508,16 @@ function installDependencyAndSetup() {
             else if (fs.existsSync('/usr/bin/yum')) {
                 // RPM Based
                 yield exec.exec('sudo yum update -y');
-                yield exec.exec('sudo yum install ant-contrib -y');
+                yield exec.exec('sudo yum install ant-contrib rh-java-common-ant p7zip -y');
+                core.addPath('/opt/rh/rh-java-common/root/usr/share/ant/bin');
+            }
+            else if (fs.existsSync('/sbin/apk')) {
+                // Alpine Based
+                yield exec.exec('apk update');
+                yield exec.exec('apk add p7zip');
+                const antContribFile = yield tc.downloadTool(`https://sourceforge.net/projects/ant-contrib/files/ant-contrib/ant-contrib-1.0b2/ant-contrib-1.0b2-bin.zip/download`);
+                yield tc.extractZip(`${antContribFile}`, `${tempDirectory}`);
+                yield io.cp(`${tempDirectory}/ant-contrib/lib/ant-contrib.jar`, `${process.env.ANT_HOME}\\lib`);
             }
             //environment
             if ('RUNNER_USER' in process.env) {

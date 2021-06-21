@@ -47,9 +47,15 @@ export async function runaqaTest(
   let dependents = await tc.downloadTool(
     'https://ci.adoptopenjdk.net/view/all/job/test.getDependency/lastSuccessfulBuild/artifact//*zip*/dependents.zip'
   )
+
+  let sevenzexe = '7z'
+  if (fs.existsSync('/usr/bin/yum')) {
+    sevenzexe = '7za'
+  }
+
   // Test.dependency only has one level of archive directory, none of actions toolkit support mv files by regex. Using 7zip discards the directory directly
   await exec.exec(
-    `7z e ${dependents} -o${process.env.GITHUB_WORKSPACE}/aqa-tests/TKG/lib`
+    `${sevenzexe} e ${dependents} -o${process.env.GITHUB_WORKSPACE}/aqa-tests/TKG/lib`
   )
 
   if (buildList.includes('system')) {
@@ -96,7 +102,11 @@ export async function runaqaTest(
 }
 
 function getTestJdkHome(version: string, jdksource: string): string {
-  let javaHome = process.env[`JAVA_HOME_${version}_X64`] as string
+  // Try JAVA_HOME first and then fall back to GITHUB actions default location
+  let javaHome = process.env['JAVA_HOME'] as string
+  if (javaHome === undefined) {
+    javaHome = process.env[`JAVA_HOME_${version}_X64`] as string
+  }
   if (jdksource === 'install-jdk') {
     // work with AdoptOpenJDK/install-sdk
     if (`JDK_${version}` in process.env) {
@@ -157,7 +167,22 @@ async function installDependencyAndSetup(): Promise<void> {
     } else if (fs.existsSync('/usr/bin/yum')) {
       // RPM Based
       await exec.exec('sudo yum update -y')
-      await exec.exec('sudo yum install ant-contrib -y')
+      await exec.exec(
+        'sudo yum install ant-contrib rh-java-common-ant p7zip -y'
+      )
+      core.addPath('/opt/rh/rh-java-common/root/usr/share/ant/bin')
+    } else if (fs.existsSync('/sbin/apk')) {
+      // Alpine Based
+      await exec.exec('apk update')
+      await exec.exec('apk add p7zip')
+      const antContribFile = await tc.downloadTool(
+        `https://sourceforge.net/projects/ant-contrib/files/ant-contrib/ant-contrib-1.0b2/ant-contrib-1.0b2-bin.zip/download`
+      )
+      await tc.extractZip(`${antContribFile}`, `${tempDirectory}`)
+      await io.cp(
+        `${tempDirectory}/ant-contrib/lib/ant-contrib.jar`,
+        `${process.env.ANT_HOME}\\lib`
+      )
     }
     //environment
     if ('RUNNER_USER' in process.env) {

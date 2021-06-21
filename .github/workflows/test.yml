@@ -28,13 +28,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        image: [adoptopenjdk/centos7_build_image]
+        image: [adoptopenjdk/centos7_build_image, adoptopenjdk/alpine3_build_image]
     steps:
     - uses: actions/checkout@v1
     - name: AQA
       uses: ./
       with: 
-        version: '11'
+        version: '8'
         jdksource: 'github-hosted'
         build_list: 'openjdk'
         target: '_jdk_custom'
