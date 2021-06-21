@@ -150,12 +150,12 @@ async function installDependencyAndSetup(): Promise<void> {
     await exec.exec('sudo sysctl -w kern.sysv.shmall=655360')
     await exec.exec('sudo sysctl -w kern.sysv.shmmax=125839605760')
   } else {
-    // Debian Based
     if (fs.existsSync('/usr/bin/apt-get')) {
+      // Debian Based
       await exec.exec('sudo apt-get update')
       await exec.exec('sudo apt-get install ant-contrib -y')
-      // RPM Based
     } else if (fs.existsSync('/usr/bin/yum')) {
+      // RPM Based
       await exec.exec('sudo yum update -y')
       await exec.exec('sudo yum install ant-contrib -y')
     }

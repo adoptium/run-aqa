@@ -3492,13 +3492,13 @@ function installDependencyAndSetup() {
             yield exec.exec('sudo sysctl -w kern.sysv.shmmax=125839605760');
         }
         else {
-            // Debian Based
             if (fs.existsSync('/usr/bin/apt-get')) {
+                // Debian Based
                 yield exec.exec('sudo apt-get update');
                 yield exec.exec('sudo apt-get install ant-contrib -y');
-                // RPM Based
             }
             else if (fs.existsSync('/usr/bin/yum')) {
+                // RPM Based
                 yield exec.exec('sudo yum update -y');
                 yield exec.exec('sudo yum install ant-contrib -y');
             }
