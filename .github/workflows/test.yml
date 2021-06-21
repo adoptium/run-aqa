@@ -21,6 +21,23 @@ jobs:
         jdksource: 'github-hosted'
         build_list: 'openjdk'
         target: '_jdk_custom'
+  openjdk_disto: # make sure build/ci work properly with other distros
+    runs-on: ubuntu-latest
+    container:
+      image: ${{ matrix.image }}
+    strategy:
+      fail-fast: false
+      matrix:
+        image: [adoptopenjdk/centos7_build_image, adoptopenjdk/alpine3_build_image]
+    steps:
+    - uses: actions/checkout@v1
+    - name: AQA
+      uses: ./
+      with: 
+        version: '8'
+        jdksource: 'github-hosted'
+        build_list: 'openjdk'
+        target: '_jdk_custom'
   functional: # make sure build/ci work properly
     runs-on: ${{ matrix.os }}
     strategy:

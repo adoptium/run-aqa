@@ -2957,7 +2957,9 @@ function run() {
             const openj9Repo = core.getInput('openj9_repo', { required: false });
             const tkgRepo = core.getInput('tkg_Repo', { required: false });
             const vendorTestRepos = core.getInput('vendor_testRepos', { required: false });
-            const vendorTestBranches = core.getInput('vendor_testBranches', { required: false });
+            const vendorTestBranches = core.getInput('vendor_testBranches', {
+                required: false
+            });
             const vendorTestDirs = core.getInput('vendor_testDirs', { required: false });
             const vendorTestShas = core.getInput('vendor_testShas', { required: false });
             let vendorTestParams = '';
@@ -3402,8 +3404,12 @@ function runaqaTest(version, jdksource, buildList, target, customTarget, openjdk
         yield runGetSh(tkgRepo, openj9Repo, vendorTestParams);
         //Get Dependencies, using /*zip*/dependents.zip to avoid loop every available files
         let dependents = yield tc.downloadTool('https://ci.adoptopenjdk.net/view/all/job/test.getDependency/lastSuccessfulBuild/artifact//*zip*/dependents.zip');
+        let sevenzexe = '7z';
+        if (fs.existsSync('/usr/bin/yum')) {
+            sevenzexe = '7za';
+        }
         // Test.dependency only has one level of archive directory, none of actions toolkit support mv files by regex. Using 7zip discards the directory directly
-        yield exec.exec(`7z e ${dependents} -o${process.env.GITHUB_WORKSPACE}/aqa-tests/TKG/lib`);
+        yield exec.exec(`${sevenzexe} e ${dependents} -o${process.env.GITHUB_WORKSPACE}/aqa-tests/TKG/lib`);
         if (buildList.includes('system')) {
             dependents = yield tc.downloadTool('https://ci.adoptopenjdk.net/view/all/job/systemtest.getDependency/lastSuccessfulBuild/artifact/*zip*/dependents.zip');
             // System.dependency has different levels of archive structures archive/systemtest_prereqs/*.*
@@ -3442,7 +3448,11 @@ function runaqaTest(version, jdksource, buildList, target, customTarget, openjdk
 }
 exports.runaqaTest = runaqaTest;
 function getTestJdkHome(version, jdksource) {
+    // Try JAVA_HOME first and then fall back to GITHUB actions default location
     let javaHome = process.env[`JAVA_HOME_${version}_X64`];
+    if (javaHome === undefined) {
+        javaHome = process.env['JAVA_HOME'];
+    }
     if (jdksource === 'install-jdk') {
         // work with AdoptOpenJDK/install-sdk
         if (`JDK_${version}` in process.env) {
@@ -3455,6 +3465,9 @@ function getTestJdkHome(version, jdksource) {
     // Remove spaces in Windows path and replace with a short name path, e.g. 'C:/Program Files/***' ->C:/Progra~1/***
     if (IS_WINDOWS && jdksource === 'github-hosted') {
         javaHome = javaHome.replace(/Program Files/g, 'Progra~1');
+    }
+    if (javaHome === undefined) {
+        core.error('JDK could not be found');
     }
     return javaHome;
 }
@@ -3490,8 +3503,27 @@ function installDependencyAndSetup() {
             yield exec.exec('sudo sysctl -w kern.sysv.shmmax=125839605760');
         }
         else {
-            yield exec.exec('sudo apt-get update');
-            yield exec.exec('sudo apt-get install ant-contrib -y');
+            if (fs.existsSync('/usr/bin/apt-get')) {
+                // Debian Based
+                yield exec.exec('sudo apt-get update');
+                yield exec.exec('sudo apt-get install ant-contrib -y');
+            }
+            else if (fs.existsSync('/usr/bin/yum')) {
+                // RPM Based
+                yield exec.exec('sudo yum update -y');
+                yield exec.exec('sudo yum install p7zip -y');
+                const antContribFile = yield tc.downloadTool(`https://sourceforge.net/projects/ant-contrib/files/ant-contrib/ant-contrib-1.0b2/ant-contrib-1.0b2-bin.zip/download`);
+                yield tc.extractZip(`${antContribFile}`, `${tempDirectory}`);
+                yield io.cp(`${tempDirectory}/ant-contrib/lib/ant-contrib.jar`, `${process.env.ANT_HOME}\\lib`);
+            }
+            else if (fs.existsSync('/sbin/apk')) {
+                // Alpine Based
+                yield exec.exec('apk update');
+                yield exec.exec('apk add p7zip');
+                const antContribFile = yield tc.downloadTool(`https://sourceforge.net/projects/ant-contrib/files/ant-contrib/ant-contrib-1.0b2/ant-contrib-1.0b2-bin.zip/download`);
+                yield tc.extractZip(`${antContribFile}`, `${tempDirectory}`);
+                yield io.cp(`${tempDirectory}/ant-contrib/lib/ant-contrib.jar`, `${process.env.ANT_HOME}\\lib`);
+            }
             //environment
             if ('RUNNER_USER' in process.env) {
                 process.env['LOGNAME'] = process.env['RUNNER_USER'];
@@ -3499,8 +3531,10 @@ function installDependencyAndSetup() {
             else {
                 core.warning('RUNNER_USER is not the GitHub Actions environment variables shell script. Container is configured differently. Please check the updated lists of environment variables.');
             }
-            //disable apport
-            yield exec.exec('sudo service apport stop');
+            if (fs.existsSync('/usr/bin/apt-get')) {
+                //disable apport
+                yield exec.exec('sudo service apport stop');
+            }
         }
     });
 }
