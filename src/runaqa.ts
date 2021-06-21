@@ -150,8 +150,15 @@ async function installDependencyAndSetup(): Promise<void> {
     await exec.exec('sudo sysctl -w kern.sysv.shmall=655360')
     await exec.exec('sudo sysctl -w kern.sysv.shmmax=125839605760')
   } else {
-    await exec.exec('sudo apt-get update')
-    await exec.exec('sudo apt-get install ant-contrib -y')
+    // Debian Based
+    if (fs.existsSync('/usr/bin/apt-get')) {
+      await exec.exec('sudo apt-get update')
+      await exec.exec('sudo apt-get install ant-contrib -y')
+      // RPM Based
+    } else if (fs.existsSync('/usr/bin/yum')) {
+      await exec.exec('sudo yum update -y')
+      await exec.exec('sudo yum install ant-contrib -y')
+    }
     //environment
     if ('RUNNER_USER' in process.env) {
       process.env['LOGNAME'] = process.env['RUNNER_USER']
@@ -161,8 +168,10 @@ async function installDependencyAndSetup(): Promise<void> {
       )
     }
 
-    //disable apport
-    await exec.exec('sudo service apport stop')
+    if (fs.existsSync('/usr/bin/apt-get')) {
+      //disable apport
+      await exec.exec('sudo service apport stop')
+    }
   }
 }
 
@@ -187,7 +196,11 @@ async function getOpenjdkTestRepo(openjdktestRepo: string): Promise<void> {
   process.chdir('aqa-tests')
 }
 
-async function runGetSh(tkgRepo: string, openj9Repo: string, vendorTestParams: string): Promise<void> {
+async function runGetSh(
+  tkgRepo: string,
+  openj9Repo: string,
+  vendorTestParams: string
+): Promise<void> {
   let parameters = ''
   if (tkgRepo !== 'TKG:master') {
     const repoBranch = parseRepoBranch(tkgRepo)

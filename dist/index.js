@@ -2957,7 +2957,9 @@ function run() {
             const openj9Repo = core.getInput('openj9_repo', { required: false });
             const tkgRepo = core.getInput('tkg_Repo', { required: false });
             const vendorTestRepos = core.getInput('vendor_testRepos', { required: false });
-            const vendorTestBranches = core.getInput('vendor_testBranches', { required: false });
+            const vendorTestBranches = core.getInput('vendor_testBranches', {
+                required: false
+            });
             const vendorTestDirs = core.getInput('vendor_testDirs', { required: false });
             const vendorTestShas = core.getInput('vendor_testShas', { required: false });
             let vendorTestParams = '';
@@ -3490,8 +3492,16 @@ function installDependencyAndSetup() {
             yield exec.exec('sudo sysctl -w kern.sysv.shmmax=125839605760');
         }
         else {
-            yield exec.exec('sudo apt-get update');
-            yield exec.exec('sudo apt-get install ant-contrib -y');
+            // Debian Based
+            if (fs.existsSync('/usr/bin/apt-get')) {
+                yield exec.exec('sudo apt-get update');
+                yield exec.exec('sudo apt-get install ant-contrib -y');
+                // RPM Based
+            }
+            else if (fs.existsSync('/usr/bin/yum')) {
+                yield exec.exec('sudo yum update -y');
+                yield exec.exec('sudo yum install ant-contrib -y');
+            }
             //environment
             if ('RUNNER_USER' in process.env) {
                 process.env['LOGNAME'] = process.env['RUNNER_USER'];
@@ -3499,8 +3509,10 @@ function installDependencyAndSetup() {
             else {
                 core.warning('RUNNER_USER is not the GitHub Actions environment variables shell script. Container is configured differently. Please check the updated lists of environment variables.');
             }
-            //disable apport
-            yield exec.exec('sudo service apport stop');
+            if (fs.existsSync('/usr/bin/apt-get')) {
+                //disable apport
+                yield exec.exec('sudo service apport stop');
+            }
         }
     });
 }
