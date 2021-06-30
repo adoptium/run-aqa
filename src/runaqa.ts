@@ -29,7 +29,7 @@ export async function runaqaTest(
   buildList: string,
   target: string,
   customTarget: string,
-  openjdktestRepo: string,
+  aqatestsRepo: string,
   openj9Repo: string,
   tkgRepo: string,
   vendorTestParams: string
@@ -40,7 +40,7 @@ export async function runaqaTest(
   if (!('TEST_JDK_HOME' in process.env))
     process.env.TEST_JDK_HOME = getTestJdkHome(version, jdksource)
 
-  await getOpenjdkTestRepo(openjdktestRepo)
+  await getAqaTestsRepo(aqatestsRepo)
   await runGetSh(tkgRepo, openj9Repo, vendorTestParams)
 
   //Get Dependencies, using /*zip*/dependents.zip to avoid loop every available files
@@ -218,10 +218,10 @@ function setSpec(): void {
   }
 }
 
-async function getOpenjdkTestRepo(openjdktestRepo: string): Promise<void> {
+async function getAqaTestsRepo(aqatestsRepo: string): Promise<void> {
   let repoBranch = ['adoptium/aqa-tests', 'master']
-  if (openjdktestRepo !== 'aqa-tests:master') {
-    repoBranch = parseRepoBranch(openjdktestRepo)
+  if (aqatestsRepo.length !== 0) {
+    repoBranch = parseRepoBranch(aqatestsRepo)
   }
   await exec.exec(
     `git clone --depth 1 -b ${repoBranch[1]} https://github.com/${repoBranch[0]}.git`
@@ -235,12 +235,11 @@ async function runGetSh(
   vendorTestParams: string
 ): Promise<void> {
   let parameters = ''
-  if (tkgRepo !== 'TKG:master') {
+  if (tkgRepo.length !== 0) {
     const repoBranch = parseRepoBranch(tkgRepo)
     parameters += `--tkg_branch ${repoBranch[1]} --tkg_repo https://github.com/${repoBranch[0]}.git`
   }
-
-  if (openj9Repo !== 'openj9:master') {
+  if (openj9Repo.length !== 0) {
     const repoBranch = parseRepoBranch(openj9Repo)
     parameters += ` --openj9_branch ${repoBranch[1]} --openj9_repo https://github.com/${repoBranch[0]}.git`
   }

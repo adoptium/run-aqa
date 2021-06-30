@@ -8,7 +8,7 @@ async function run(): Promise<void> {
     const buildList = core.getInput('build_list', {required: false})
     const target = core.getInput('target', {required: false})
     const customTarget = core.getInput('custom_target', {required: false})
-    const openjdktestRepo = core.getInput('openjdk_testRepo', {required: false})
+    const aqatestsRepo = core.getInput('aqa-testsRepo', {required: false})
     const openj9Repo = core.getInput('openj9_repo', {required: false})
     const tkgRepo = core.getInput('tkg_Repo', {required: false})
     const vendorTestRepos = core.getInput('vendor_testRepos', {required: false})
@@ -64,7 +64,7 @@ async function run(): Promise<void> {
       buildList,
       target,
       customTarget,
-      openjdktestRepo,
+      aqatestsRepo,
       openj9Repo,
       tkgRepo,
       vendorTestParams

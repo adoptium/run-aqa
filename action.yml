@@ -17,18 +17,15 @@ inputs:
   custom_target:   #  Used if need to set non-default custom target
     description:
     required: false
-  openjdk_testRepo:
-    description: 'aqa-tests Repo'
+  aqa-testsRepo:
+    description: 'Personal aqa-tests Repo. For example, octocat/aqa-tests:test'
     required: false
-    default: 'aqa-tests:master'
   openj9_repo:
     description: 'openj9 Repo'
     required: false
-    default: 'openj9:master'
   tkg_Repo:
-    description: 'TKG Repo'
+    description: 'Personal TKG Repo. For example, octocat/TKG:test'
     required: false
-    default: 'TKG:master'
   vendor_testRepos:
       description: 'Comma-separated list of vendor repositories'
       required: false

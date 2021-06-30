@@ -2953,7 +2953,7 @@ function run() {
             const buildList = core.getInput('build_list', { required: false });
             const target = core.getInput('target', { required: false });
             const customTarget = core.getInput('custom_target', { required: false });
-            const openjdktestRepo = core.getInput('openjdk_testRepo', { required: false });
+            const aqatestsRepo = core.getInput('aqa-testsRepo', { required: false });
             const openj9Repo = core.getInput('openj9_repo', { required: false });
             const tkgRepo = core.getInput('tkg_Repo', { required: false });
             const vendorTestRepos = core.getInput('vendor_testRepos', { required: false });
@@ -2991,7 +2991,7 @@ function run() {
             if (vendorTestShas !== '') {
                 vendorTestParams += ` --vendor_shas ${vendorTestShas}`;
             }
-            yield runaqa.runaqaTest(version, jdksource, buildList, target, customTarget, openjdktestRepo, openj9Repo, tkgRepo, vendorTestParams);
+            yield runaqa.runaqaTest(version, jdksource, buildList, target, customTarget, aqatestsRepo, openj9Repo, tkgRepo, vendorTestParams);
         }
         catch (error) {
             core.setFailed(error.message);
@@ -3393,14 +3393,14 @@ if (!tempDirectory) {
     }
     tempDirectory = path.join(baseLocation, 'actions', 'temp');
 }
-function runaqaTest(version, jdksource, buildList, target, customTarget, openjdktestRepo, openj9Repo, tkgRepo, vendorTestParams) {
+function runaqaTest(version, jdksource, buildList, target, customTarget, aqatestsRepo, openj9Repo, tkgRepo, vendorTestParams) {
     return __awaiter(this, void 0, void 0, function* () {
         yield installDependencyAndSetup();
         setSpec();
         process.env.BUILD_LIST = buildList;
         if (!('TEST_JDK_HOME' in process.env))
             process.env.TEST_JDK_HOME = getTestJdkHome(version, jdksource);
-        yield getOpenjdkTestRepo(openjdktestRepo);
+        yield getAqaTestsRepo(aqatestsRepo);
         yield runGetSh(tkgRepo, openj9Repo, vendorTestParams);
         //Get Dependencies, using /*zip*/dependents.zip to avoid loop every available files
         let dependents = yield tc.downloadTool('https://ci.adoptopenjdk.net/view/all/job/test.getDependency/lastSuccessfulBuild/artifact//*zip*/dependents.zip');
@@ -3549,11 +3549,11 @@ function setSpec() {
         process.env['SPEC'] = 'linux_x86-64_cmprssptrs';
     }
 }
-function getOpenjdkTestRepo(openjdktestRepo) {
+function getAqaTestsRepo(aqatestsRepo) {
     return __awaiter(this, void 0, void 0, function* () {
         let repoBranch = ['adoptium/aqa-tests', 'master'];
-        if (openjdktestRepo !== 'aqa-tests:master') {
-            repoBranch = parseRepoBranch(openjdktestRepo);
+        if (aqatestsRepo.length !== 0) {
+            repoBranch = parseRepoBranch(aqatestsRepo);
         }
         yield exec.exec(`git clone --depth 1 -b ${repoBranch[1]} https://github.com/${repoBranch[0]}.git`);
         process.chdir('aqa-tests');
@@ -3562,11 +3562,11 @@ function getOpenjdkTestRepo(openjdktestRepo) {
 function runGetSh(tkgRepo, openj9Repo, vendorTestParams) {
     return __awaiter(this, void 0, void 0, function* () {
         let parameters = '';
-        if (tkgRepo !== 'TKG:master') {
+        if (tkgRepo.length !== 0) {
             const repoBranch = parseRepoBranch(tkgRepo);
             parameters += `--tkg_branch ${repoBranch[1]} --tkg_repo https://github.com/${repoBranch[0]}.git`;
         }
-        if (openj9Repo !== 'openj9:master') {
+        if (openj9Repo.length !== 0) {
             const repoBranch = parseRepoBranch(openj9Repo);
             parameters += ` --openj9_branch ${repoBranch[1]} --openj9_repo https://github.com/${repoBranch[0]}.git`;
         }
