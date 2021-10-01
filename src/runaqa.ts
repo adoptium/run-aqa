@@ -32,7 +32,8 @@ export async function runaqaTest(
   aqatestsRepo: string,
   openj9Repo: string,
   tkgRepo: string,
-  vendorTestParams: string
+  vendorTestParams: string,
+  aqasystemtestsRepo: string,
 ): Promise<void> {
   await installDependencyAndSetup()
   setSpec()
@@ -57,6 +58,9 @@ export async function runaqaTest(
   await exec.exec(
     `${sevenzexe} e ${dependents} -o${process.env.GITHUB_WORKSPACE}/aqa-tests/TKG/lib`
   )
+  if(buildList.includes('system') || buildList.includes('openjdk')) {
+    await getAqaSystemTestsRepo(aqasystemtestsRepo);
+  }
 
   if (buildList.includes('system')) {
     dependents = await tc.downloadTool(
@@ -227,6 +231,17 @@ async function getAqaTestsRepo(aqatestsRepo: string): Promise<void> {
     `git clone --depth 1 -b ${repoBranch[1]} https://github.com/${repoBranch[0]}.git`
   )
   process.chdir('aqa-tests')
+}
+
+async function getAqaSystemTestsRepo(aqasystemtestsRepo: string): Promise<void> {
+  let repoBranch = ['adoptium/aqa-systemtests', 'master']
+  if (aqasystemtestsRepo.length !== 0) {
+    repoBranch = parseRepoBranch(aqasystemtestsRepo)
+  }
+  await exec.exec(
+    `git clone --depth 1 -b ${repoBranch[1]} https://github.com/${repoBranch[0]}.git`
+  )
+  process.chdir('aqa-systemtests')
 }
 
 async function runGetSh(
