@@ -3413,7 +3413,7 @@ function runaqaTest(version, jdksource, buildList, target, customTarget, aqatest
         // Test.dependency only has one level of archive directory, none of actions toolkit support mv files by regex. Using 7zip discards the directory directly
         yield exec.exec(`${sevenzexe} e ${dependents} -o${process.env.GITHUB_WORKSPACE}/aqa-tests/TKG/lib`);
         if (buildList.includes('system')) {
-            yield getAqaSystemTestsRepo(aqasystemtestsRepo);
+            getAqaSystemTestsRepo(aqasystemtestsRepo);
             dependents = yield tc.downloadTool('https://ci.adoptopenjdk.net/view/all/job/systemtest.getDependency/lastSuccessfulBuild/artifact/*zip*/dependents.zip');
             // System.dependency has different levels of archive structures archive/systemtest_prereqs/*.*
             // None of io.mv, io.cp and exec.exec can mv directories as expected (mv archive/ ./). Move subfolder systemtest_prereqs instead.
@@ -3564,14 +3564,12 @@ function getAqaTestsRepo(aqatestsRepo) {
 }
 
 function getAqaSystemTestsRepo(aqasystemtestsRepo) {
-  return __awaiter(this, void 0, void 0, function* () {
-      let repoBranch = ['adoptium/aqa-systemtests', 'master'];
-      if (aqasystemtestsRepo.length !== 0) {
-          repoBranch = parseRepoBranch(aqasystemtestsRepo);
-      }
-      yield exec.exec(`git clone --depth 1 -b ${repoBranch[1]} https://github.com/${repoBranch[0]}.git`);
-      process.chdir('aqa-systemtests');
-  });
+  let repoBranch = ['adoptium/aqa-systemtests', 'master'];
+  if (aqasystemtestsRepo.length !== 0) {
+      repoBranch = parseRepoBranch(aqasystemtestsRepo);
+  }
+  process.env.ADOPTOPENJDK_SYSTEMTEST_REPO = repoBranch[0];
+  process.env.ADOPTOPENJDK_SYSTEMTEST_BRANCH = repoBranch[1];
 }
 
 function runGetSh(tkgRepo, openj9Repo, vendorTestParams) {
