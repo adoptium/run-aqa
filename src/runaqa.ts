@@ -32,6 +32,7 @@ export async function runaqaTest(
   aqatestsRepo: string,
   openj9Repo: string,
   tkgRepo: string,
+  jdkRepo: string,
   vendorTestParams: string
 ): Promise<void> {
   await installDependencyAndSetup()
@@ -82,6 +83,13 @@ export async function runaqaTest(
       myOutput += data.toString()
     }
   }
+
+  if (buildList === 'openjdk' && jdkRepo && jdkRepo.length !== 0) {
+    const repoBranch = parseRepoBranch(jdkRepo)
+    process.env.JDK_REPO = repoBranch[0]
+    process.env.JDK_BRANCH = repoBranch[1]
+  }
+
   process.chdir('TKG')
   try {
     await exec.exec('make compile')

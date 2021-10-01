@@ -2956,6 +2956,7 @@ function run() {
             const aqatestsRepo = core.getInput('aqa-testsRepo', { required: false });
             const openj9Repo = core.getInput('openj9_repo', { required: false });
             const tkgRepo = core.getInput('tkg_Repo', { required: false });
+            const jdkRepo = core.getInput('jdk_Repo', { required: false });
             const vendorTestRepos = core.getInput('vendor_testRepos', { required: false });
             const vendorTestBranches = core.getInput('vendor_testBranches', {
                 required: false
@@ -2991,7 +2992,7 @@ function run() {
             if (vendorTestShas !== '') {
                 vendorTestParams += ` --vendor_shas ${vendorTestShas}`;
             }
-            yield runaqa.runaqaTest(version, jdksource, buildList, target, customTarget, aqatestsRepo, openj9Repo, tkgRepo, vendorTestParams);
+            yield runaqa.runaqaTest(version, jdksource, buildList, target, customTarget, aqatestsRepo, openj9Repo, tkgRepo, jdkRepo, vendorTestParams);
         }
         catch (error) {
             core.setFailed(error.message);
@@ -3393,7 +3394,7 @@ if (!tempDirectory) {
     }
     tempDirectory = path.join(baseLocation, 'actions', 'temp');
 }
-function runaqaTest(version, jdksource, buildList, target, customTarget, aqatestsRepo, openj9Repo, tkgRepo, vendorTestParams) {
+function runaqaTest(version, jdksource, buildList, target, customTarget, aqatestsRepo, openj9Repo, tkgRepo, jdkRepo, vendorTestParams) {
     return __awaiter(this, void 0, void 0, function* () {
         yield installDependencyAndSetup();
         setSpec();
@@ -3425,6 +3426,11 @@ function runaqaTest(version, jdksource, buildList, target, customTarget, aqatest
                 myOutput += data.toString();
             }
         };
+        if (buildList === 'openjdk' && jdkRepo && jdkRepo.length !== 0) {
+            const repoBranch = parseRepoBranch(jdkRepo);
+            process.env.JDK_REPO = repoBranch[0];
+            process.env.JDK_BRANCH = repoBranch[1];
+        }
         process.chdir('TKG');
         try {
             yield exec.exec('make compile');

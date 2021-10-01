@@ -9,10 +9,10 @@ inputs:
     description: 'testing jdk version (Required when jdksource is github-hosted or install-jdk.)'
     required: false
   build_list:           # test category
-    description: 
+    description:
     default: 'openjdk'
   target:              # test
-    description: 
+    description:
     default: '_jdk_math'
   custom_target:   #  Used if need to set non-default custom target
     description:
@@ -25,6 +25,9 @@ inputs:
     required: false
   tkg_Repo:
     description: 'Personal TKG Repo. For example, octocat/TKG:test'
+    required: false
+  jdk_Repo:
+    description: 'jdk Repo'
     required: false
   vendor_testRepos:
       description: 'Comma-separated list of vendor repositories'
