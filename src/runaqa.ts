@@ -58,11 +58,9 @@ export async function runaqaTest(
   await exec.exec(
     `${sevenzexe} e ${dependents} -o${process.env.GITHUB_WORKSPACE}/aqa-tests/TKG/lib`
   )
-  if(buildList.includes('system') || buildList.includes('openjdk')) {
-    await getAqaSystemTestsRepo(aqasystemtestsRepo);
-  }
 
   if (buildList.includes('system')) {
+    await getAqaSystemTestsRepo(aqasystemtestsRepo);
     dependents = await tc.downloadTool(
       'https://ci.adoptopenjdk.net/view/all/job/systemtest.getDependency/lastSuccessfulBuild/artifact/*zip*/dependents.zip'
     )

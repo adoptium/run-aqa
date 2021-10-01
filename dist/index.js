@@ -3402,9 +3402,6 @@ function runaqaTest(version, jdksource, buildList, target, customTarget, aqatest
         if (!('TEST_JDK_HOME' in process.env))
             process.env.TEST_JDK_HOME = getTestJdkHome(version, jdksource);
         yield getAqaTestsRepo(aqatestsRepo);
-        if(buildList.includes('system') || buildList.includes('openjdk')) {
-          yield getAqaSystemTestsRepo(aqasystemtestsRepo);
-        }
         
         yield runGetSh(tkgRepo, openj9Repo, vendorTestParams);
         //Get Dependencies, using /*zip*/dependents.zip to avoid loop every available files
@@ -3416,6 +3413,7 @@ function runaqaTest(version, jdksource, buildList, target, customTarget, aqatest
         // Test.dependency only has one level of archive directory, none of actions toolkit support mv files by regex. Using 7zip discards the directory directly
         yield exec.exec(`${sevenzexe} e ${dependents} -o${process.env.GITHUB_WORKSPACE}/aqa-tests/TKG/lib`);
         if (buildList.includes('system')) {
+            yield getAqaSystemTestsRepo(aqasystemtestsRepo);
             dependents = yield tc.downloadTool('https://ci.adoptopenjdk.net/view/all/job/systemtest.getDependency/lastSuccessfulBuild/artifact/*zip*/dependents.zip');
             // System.dependency has different levels of archive structures archive/systemtest_prereqs/*.*
             // None of io.mv, io.cp and exec.exec can mv directories as expected (mv archive/ ./). Move subfolder systemtest_prereqs instead.
