@@ -20,6 +20,10 @@ inputs:
   aqa-testsRepo:
     description: 'Personal aqa-tests Repo. For example, octocat/aqa-tests:test'
     required: false
+  aqa-systemtestsRepo:
+    description: 'Personal aqa-systemtests Repo. For example, octocat/aqa-systemtests:test'
+    required: false
+    default: 'aqa-systemtest:master'
   openj9_repo:
     description: 'openj9 Repo'
     required: false

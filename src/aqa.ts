@@ -9,6 +9,7 @@ async function run(): Promise<void> {
     const target = core.getInput('target', {required: false})
     const customTarget = core.getInput('custom_target', {required: false})
     const aqatestsRepo = core.getInput('aqa-testsRepo', {required: false})
+    const aqasystemtestsRepo = core.getInput('aqa-systemtestsRepo', {required: false})
     const openj9Repo = core.getInput('openj9_repo', {required: false})
     const tkgRepo = core.getInput('tkg_Repo', {required: false})
     const vendorTestRepos = core.getInput('vendor_testRepos', {required: false})
@@ -67,7 +68,8 @@ async function run(): Promise<void> {
       aqatestsRepo,
       openj9Repo,
       tkgRepo,
-      vendorTestParams
+      vendorTestParams,
+      aqasystemtestsRepo,
     )
   } catch (error) {
     core.setFailed(error.message)

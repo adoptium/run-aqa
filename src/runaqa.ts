@@ -32,7 +32,8 @@ export async function runaqaTest(
   aqatestsRepo: string,
   openj9Repo: string,
   tkgRepo: string,
-  vendorTestParams: string
+  vendorTestParams: string,
+  aqasystemtestsRepo: string,
 ): Promise<void> {
   await installDependencyAndSetup()
   setSpec()
@@ -59,6 +60,7 @@ export async function runaqaTest(
   )
 
   if (buildList.includes('system')) {
+    getAqaSystemTestsRepo(aqasystemtestsRepo);
     dependents = await tc.downloadTool(
       'https://ci.adoptopenjdk.net/view/all/job/systemtest.getDependency/lastSuccessfulBuild/artifact/*zip*/dependents.zip'
     )
@@ -227,6 +229,15 @@ async function getAqaTestsRepo(aqatestsRepo: string): Promise<void> {
     `git clone --depth 1 -b ${repoBranch[1]} https://github.com/${repoBranch[0]}.git`
   )
   process.chdir('aqa-tests')
+}
+
+function getAqaSystemTestsRepo(aqasystemtestsRepo: string) {
+  let repoBranch = ['adoptium/aqa-systemtests', 'master']
+  if (aqasystemtestsRepo.length !== 0) {
+    repoBranch = parseRepoBranch(aqasystemtestsRepo)
+  }
+  process.env.ADOPTOPENJDK_SYSTEMTEST_REPO = repoBranch[0];
+  process.env.ADOPTOPENJDK_SYSTEMTEST_BRANCH = repoBranch[1];
 }
 
 async function runGetSh(
