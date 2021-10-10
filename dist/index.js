@@ -2956,6 +2956,7 @@ function run() {
             const aqatestsRepo = core.getInput('aqa-testsRepo', { required: false });
             const aqasystemtestsRepo = core.getInput('aqa-systemtestsRepo', {required: false});
             const openj9Repo = core.getInput('openj9_repo', { required: false });
+            const openj9systemtestsRepo = core.getInput('openj9-systemtestsRepo', { required: false });
             const tkgRepo = core.getInput('tkg_Repo', { required: false });
             const vendorTestRepos = core.getInput('vendor_testRepos', { required: false });
             const vendorTestBranches = core.getInput('vendor_testBranches', {
@@ -2992,7 +2993,7 @@ function run() {
             if (vendorTestShas !== '') {
                 vendorTestParams += ` --vendor_shas ${vendorTestShas}`;
             }
-            yield runaqa.runaqaTest(version, jdksource, buildList, target, customTarget, aqatestsRepo, openj9Repo, tkgRepo, vendorTestParams, aqasystemtestsRepo);
+            yield runaqa.runaqaTest(version, jdksource, buildList, target, customTarget, aqatestsRepo, openj9Repo, tkgRepo, vendorTestParams, aqasystemtestsRepo,openj9systemtestsRepo);
         }
         catch (error) {
             core.setFailed(error.message);
@@ -3394,7 +3395,7 @@ if (!tempDirectory) {
     }
     tempDirectory = path.join(baseLocation, 'actions', 'temp');
 }
-function runaqaTest(version, jdksource, buildList, target, customTarget, aqatestsRepo, openj9Repo, tkgRepo, vendorTestParams, aqasystemtestsRepo) {
+function runaqaTest(version, jdksource, buildList, target, customTarget, aqatestsRepo, openj9Repo, tkgRepo, vendorTestParams, aqasystemtestsRepo, openj9systemtestsRepo) {
     return __awaiter(this, void 0, void 0, function* () {
         yield installDependencyAndSetup();
         setSpec();
@@ -3413,6 +3414,7 @@ function runaqaTest(version, jdksource, buildList, target, customTarget, aqatest
         // Test.dependency only has one level of archive directory, none of actions toolkit support mv files by regex. Using 7zip discards the directory directly
         yield exec.exec(`${sevenzexe} e ${dependents} -o${process.env.GITHUB_WORKSPACE}/aqa-tests/TKG/lib`);
         if (buildList.includes('system')) {
+            getOpenj9SystemTestsRepo(openj9systemtestsRepo);
             getAqaSystemTestsRepo(aqasystemtestsRepo);
             dependents = yield tc.downloadTool('https://ci.adoptopenjdk.net/view/all/job/systemtest.getDependency/lastSuccessfulBuild/artifact/*zip*/dependents.zip');
             // System.dependency has different levels of archive structures archive/systemtest_prereqs/*.*
@@ -3567,6 +3569,15 @@ function getAqaSystemTestsRepo(aqasystemtestsRepo) {
   let repoBranch = ['adoptium/aqa-systemtests', 'master'];
   if (aqasystemtestsRepo.length !== 0) {
       repoBranch = parseRepoBranch(aqasystemtestsRepo);
+  }
+  process.env.ADOPTOPENJDK_SYSTEMTEST_REPO = repoBranch[0];
+  process.env.ADOPTOPENJDK_SYSTEMTEST_BRANCH = repoBranch[1];
+}
+
+function getOpenj9SystemTestsRepo(openj9systemtestsRepo) {
+  let repoBranch = ['eclipse-openj9/openj9-systemtest', 'master'];
+  if (openj9systemtestsRepo.length !== 0) {
+      repoBranch = parseRepoBranch(openj9systemtestsRepo);
   }
   process.env.ADOPTOPENJDK_SYSTEMTEST_REPO = repoBranch[0];
   process.env.ADOPTOPENJDK_SYSTEMTEST_BRANCH = repoBranch[1];
@@ -5049,3 +5060,4 @@ exports.exec = exec;
 /***/ })
 
 /******/ });
+

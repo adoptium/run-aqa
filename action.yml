@@ -27,6 +27,10 @@ inputs:
   openj9_repo:
     description: 'openj9 Repo'
     required: false
+  openj9-systemtestsRepo:
+    description: 'Personal openj9-systemtests Repo'
+    required: false
+    default: 'openj9-systemtests:master'
   tkg_Repo:
     description: 'Personal TKG Repo. For example, octocat/TKG:test'
     required: false
