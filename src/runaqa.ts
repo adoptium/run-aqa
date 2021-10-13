@@ -60,7 +60,9 @@ export async function runaqaTest(
   )
 
   if (buildList.includes('system')) {
+    if (aqa-systemtestsRepo && aqa-systemtestsRepo.length !== 0) {
     getAqaSystemTestsRepo(aqasystemtestsRepo);
+    }
     dependents = await tc.downloadTool(
       'https://ci.adoptopenjdk.net/view/all/job/systemtest.getDependency/lastSuccessfulBuild/artifact/*zip*/dependents.zip'
     )
@@ -232,10 +234,7 @@ async function getAqaTestsRepo(aqatestsRepo: string): Promise<void> {
 }
 
 function getAqaSystemTestsRepo(aqasystemtestsRepo: string) {
-  let repoBranch = ['adoptium/aqa-systemtests', 'master']
-  if (aqasystemtestsRepo.length !== 0) {
-    repoBranch = parseRepoBranch(aqasystemtestsRepo)
-  }
+  const repoBranch = parseRepoBranch(aqasystemtestsRepo)
   process.env.ADOPTOPENJDK_SYSTEMTEST_REPO = repoBranch[0];
   process.env.ADOPTOPENJDK_SYSTEMTEST_BRANCH = repoBranch[1];
 }
