@@ -15,7 +15,7 @@ The project maintains the following source code repositories
 * https://github.com/adoptium/run-aqa
 
 ## Contibutor
-Fatimah Akanbi
+Akanbi Fatimah
 
 ## Eclipse Contributor Agreement
 
