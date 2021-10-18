@@ -2957,6 +2957,7 @@ function run() {
             const aqasystemtestsRepo = core.getInput('aqa-systemtestsRepo', {required: false});
             const openj9Repo = core.getInput('openj9_repo', { required: false });
             const tkgRepo = core.getInput('tkg_Repo', { required: false });
+            const stfRepo = core.getInput('stf_Repo', { required: false });
             const vendorTestRepos = core.getInput('vendor_testRepos', { required: false });
             const vendorTestBranches = core.getInput('vendor_testBranches', {
                 required: false
@@ -2992,7 +2993,7 @@ function run() {
             if (vendorTestShas !== '') {
                 vendorTestParams += ` --vendor_shas ${vendorTestShas}`;
             }
-            yield runaqa.runaqaTest(version, jdksource, buildList, target, customTarget, aqatestsRepo, openj9Repo, tkgRepo, vendorTestParams, aqasystemtestsRepo);
+            yield runaqa.runaqaTest(version, jdksource, buildList, target, customTarget, aqatestsRepo, openj9Repo, tkgRepo, stfRepo, vendorTestParams, aqasystemtestsRepo);
         }
         catch (error) {
             core.setFailed(error.message);
@@ -3394,7 +3395,7 @@ if (!tempDirectory) {
     }
     tempDirectory = path.join(baseLocation, 'actions', 'temp');
 }
-function runaqaTest(version, jdksource, buildList, target, customTarget, aqatestsRepo, openj9Repo, tkgRepo, vendorTestParams, aqasystemtestsRepo) {
+function runaqaTest(version, jdksource, buildList, target, customTarget, aqatestsRepo, openj9Repo, tkgRepo, stfRepo, vendorTestParams, aqasystemtestsRepo) {
     return __awaiter(this, void 0, void 0, function* () {
         yield installDependencyAndSetup();
         setSpec();
@@ -3428,6 +3429,11 @@ function runaqaTest(version, jdksource, buildList, target, customTarget, aqatest
                 myOutput += data.toString();
             }
         };
+        if (buildList === 'openjdk' && stfRepo && sftRepo.length !== 0) {
+          const repoBranch = parseRepoBranch(stfRepo);
+          process.env.STF_REPO = repoBranch[0];
+          process.env.STF_BRANCH = repoBranch[1];
+        }
         process.chdir('TKG');
         try {
             yield exec.exec('make compile');

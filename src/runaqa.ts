@@ -32,6 +32,7 @@ export async function runaqaTest(
   aqatestsRepo: string,
   openj9Repo: string,
   tkgRepo: string,
+  stfRepo: string,
   vendorTestParams: string,
   aqasystemtestsRepo: string,
 ): Promise<void> {
@@ -85,6 +86,12 @@ export async function runaqaTest(
     stdout: (data: Buffer) => {
       myOutput += data.toString()
     }
+  }
+
+  if (buildList === 'openjdk' && stfRepo && stfRepo.length !== 0) {
+    const repoBranch = parseRepoBranch(stfRepo)
+    process.env.STF_REPO = repoBranch[0]
+    process.env.STF_BRANCH = repoBranch[1]
   }
   process.chdir('TKG')
   try {

@@ -12,6 +12,7 @@ async function run(): Promise<void> {
     const aqasystemtestsRepo = core.getInput('aqa-systemtestsRepo', {required: false})
     const openj9Repo = core.getInput('openj9_repo', {required: false})
     const tkgRepo = core.getInput('tkg_Repo', {required: false})
+    const stfRepo = core.getInput('stf_Repo',{required: false})
     const vendorTestRepos = core.getInput('vendor_testRepos', {required: false})
     const vendorTestBranches = core.getInput('vendor_testBranches', {
       required: false
@@ -68,6 +69,7 @@ async function run(): Promise<void> {
       aqatestsRepo,
       openj9Repo,
       tkgRepo,
+      stfRepo,
       vendorTestParams,
       aqasystemtestsRepo,
     )
