@@ -64,6 +64,12 @@ export async function runaqaTest(
     if (aqa-systemtestsRepo && aqa-systemtestsRepo.length !== 0) {
     getAqaSystemTestsRepo(aqasystemtestsRepo);
     }
+    
+   if (stfRepo && stfRepo.length !== 0) {
+     const repoBranch = parseRepoBranch(stfRepo) 
+     process.env.STF_REPO = repoBranch[0]
+     process.env.STF_BRANCH = repoBranch[1]
+    }
     dependents = await tc.downloadTool(
       'https://ci.adoptopenjdk.net/view/all/job/systemtest.getDependency/lastSuccessfulBuild/artifact/*zip*/dependents.zip'
     )
