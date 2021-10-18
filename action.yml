@@ -11,9 +11,16 @@ inputs:
   build_list:           # test category
     description: 
     default: 'openjdk'
-  target:              # test
+  target:         # test
+  description: 
+  default: '_jdk_math'
+  build_list:           # test category
     description: 
-    default: '_jdk_math'
+    default: 'openstf'
+  target:  #test
+  description: 
+  default: '_stf_math'
+   
   custom_target:   #  Used if need to set non-default custom target
     description:
     required: false
@@ -28,6 +35,9 @@ inputs:
     required: false
   tkg_Repo:
     description: 'Personal TKG Repo. For example, octocat/TKG:test'
+    required: false
+  stf_Repo:
+    description: 'stf repo'
     required: false
   vendor_testRepos:
       description: 'Comma-separated list of vendor repositories'
