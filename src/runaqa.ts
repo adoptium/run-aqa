@@ -93,12 +93,6 @@ export async function runaqaTest(
       myOutput += data.toString()
     }
   }
-
-  if (buildList === 'openjdk' && stfRepo && stfRepo.length !== 0) {
-    const repoBranch = parseRepoBranch(stfRepo)
-    process.env.STF_REPO = repoBranch[0]
-    process.env.STF_BRANCH = repoBranch[1]
-  }
   process.chdir('TKG')
   try {
     await exec.exec('make compile')
