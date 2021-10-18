@@ -2957,6 +2957,7 @@ function run() {
             const aqasystemtestsRepo = core.getInput('aqa-systemtestsRepo', {required: false});
             const openj9Repo = core.getInput('openj9_repo', { required: false });
             const tkgRepo = core.getInput('tkg_Repo', { required: false });
+            const stfRepo = core.getInput('stf_Repo', { required: false });
             const vendorTestRepos = core.getInput('vendor_testRepos', { required: false });
             const vendorTestBranches = core.getInput('vendor_testBranches', {
                 required: false
@@ -2993,6 +2994,7 @@ function run() {
                 vendorTestParams += ` --vendor_shas ${vendorTestShas}`;
             }
             yield runaqa.runaqaTest(version, jdksource, buildList, target, customTarget, aqatestsRepo, openj9Repo, tkgRepo, vendorTestParams, aqasystemtestsRepo);
+            yield runaqa.runaqaTest(version, jdksource, buildList, target, customTarget, aqatestsRepo, openj9Repo, tkgRepo,stfRepo, vendorTestParams, aqasystemtestsRepo);
         }
         catch (error) {
             core.setFailed(error.message);
@@ -3394,13 +3396,13 @@ if (!tempDirectory) {
     }
     tempDirectory = path.join(baseLocation, 'actions', 'temp');
 }
-function runaqaTest(version, jdksource, buildList, target, customTarget, aqatestsRepo, openj9Repo, tkgRepo, vendorTestParams, aqasystemtestsRepo) {
+function runaqaTest(version, stfsource, buildList, target, customTarget, aqatestsRepo, openj9Repo, tkgRepo,stfRepo, vendorTestParams, aqasystemtestsRepo) {
     return __awaiter(this, void 0, void 0, function* () {
         yield installDependencyAndSetup();
         setSpec();
         process.env.BUILD_LIST = buildList;
-        if (!('TEST_JDK_HOME' in process.env))
-            process.env.TEST_JDK_HOME = getTestJdkHome(version, jdksource);
+        if (!('TEST_STF_HOME' in process.env))
+            process.env.TEST_STF_HOME = getTestStfHome(version, stfsource);
         yield getAqaTestsRepo(aqatestsRepo);
         
         yield runGetSh(tkgRepo, openj9Repo, vendorTestParams);
@@ -3428,6 +3430,11 @@ function runaqaTest(version, jdksource, buildList, target, customTarget, aqatest
                 myOutput += data.toString();
             }
         };
+        if (buildList === 'openstf' && stfRepo && stfRepo.length !== 0) {
+          const repoBranch = parseRepoBranch(stfRepo);
+          process.env.STF_REPO = repoBranch[0];
+          process.env.STF_BRANCH = repoBranch[1];
+      }
         process.chdir('TKG');
         try {
             yield exec.exec('make compile');
@@ -3450,27 +3457,27 @@ function runaqaTest(version, jdksource, buildList, target, customTarget, aqatest
     });
 }
 exports.runaqaTest = runaqaTest;
-function getTestJdkHome(version, jdksource) {
+function getTestStfHome(version, stfsource) {
     // Try JAVA_HOME first and then fall back to GITHUB actions default location
     let javaHome = process.env[`JAVA_HOME_${version}_X64`];
     if (javaHome === undefined) {
         javaHome = process.env['JAVA_HOME'];
     }
-    if (jdksource === 'install-jdk') {
+    if (stfsource === 'install-stf') {
         // work with AdoptOpenJDK/install-sdk
-        if (`JDK_${version}` in process.env) {
-            javaHome = process.env[`JDK_${version}`];
+        if (`STF_${version}` in process.env) {
+            javaHome = process.env[`STF_${version}`];
         }
         else {
             javaHome = process.env.JAVA_HOME;
         }
     }
     // Remove spaces in Windows path and replace with a short name path, e.g. 'C:/Program Files/***' ->C:/Progra~1/***
-    if (IS_WINDOWS && jdksource === 'github-hosted') {
+    if (IS_WINDOWS && stfsource === 'github-hosted') {
         javaHome = javaHome.replace(/Program Files/g, 'Progra~1');
     }
     if (javaHome === undefined) {
-        core.error('JDK could not be found');
+        core.error('STF could not be found');
     }
     return javaHome;
 }
