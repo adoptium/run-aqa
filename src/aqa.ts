@@ -44,7 +44,7 @@ async function run(): Promise<void> {
     }
     if (stfSource !== 'upstream' && version.length === 0) {
       core.setFailed(
-        'Please provide stfversion if stfsource is github-hosted installed or AdoptOpenJKD/install-jdk installed.'
+        'Please provide stfversion if stfsource is github-hosted installed or AdoptOpenSTF/install-stf installed.'
       )
     }
     if (vendorTestRepos !== '') {
@@ -72,7 +72,7 @@ async function run(): Promise<void> {
       aqasystemtestsRepo,
     )
     } catch (error) {
-    core.setFailed(error.message)
+    core.setFailed('Please provide stfversion if stfsource is github-hosted installed or AdoptOpenSTF/install-stf installed.')
     }
 }
 
