@@ -269,6 +269,6 @@ function parseRepoBranch(repoBranch: string): string[] {
   if(slashIndexCheck>0 && colonIndexCheck>0 && slashIndexCheck<colonIndexCheck) {
     return tempRepo.split(':')
   } else  {
-    return "Error in string parameter format. Required form: 'octocat/projectnames:branch' ".split('#')
+    return "Error in string parameter format. Required form: 'octocat/projectnames:branch' "
   }
 }
