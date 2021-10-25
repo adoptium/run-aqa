@@ -3599,7 +3599,7 @@ function parseRepoBranch(repoBranch) {
       return tempRepo.split(':');
     }
     else{
-      return "Error in string parameter format. Required form: 'octocat/projectnames:branch' ".split('#');
+      return "Error in string parameter format. Required form: 'octocat/projectnames:branch' ";
     }
 }
 
