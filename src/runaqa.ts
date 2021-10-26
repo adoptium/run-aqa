@@ -60,7 +60,7 @@ export async function runaqaTest(
   )
 
   if (buildList.includes('system')) {
-    if (aqa-systemtestsRepo && aqa-systemtestsRepo.length !== 0) {
+    if (aqasystemtestsRepo && aqasystemtestsRepo.length !== 0) {
     getAqaSystemTestsRepo(aqasystemtestsRepo);
     }
     dependents = await tc.downloadTool(
