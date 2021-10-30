@@ -2,9 +2,15 @@ name: 'Running AQA test'
 description: 'Running AQA test'
 author: 'Sophia Guo'
 inputs:
-  jdksource:      # AdoptOpenJDK/install-jdk, github-hosted environment, upstream
-    description: 'github-hosted default or customized'
+  jdksource:      # upstream, github-hosted, install-jdk, nightly, customized
+    description: 'upstream, github-hosted, install-jdk, nightly, customized'
     default: 'upstream'
+  customizedSdkUrl:
+    description: 'if jdksource is nightly or customized, this is the url for customized sdk'
+    required: false
+  sdkdir:
+    description: 'if jdksource is nightly or customized, please provide preferred directory to store sdk'
+    required: false
   version:              # jdk version
     description: 'testing jdk version (Required when jdksource is github-hosted or install-jdk.)'
     required: false

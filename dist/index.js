@@ -2949,12 +2949,18 @@ function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const jdksource = core.getInput('jdksource', { required: false });
+            const customizedSdkUrl = core.getInput('customizedSdkUrl', {
+                required: false
+            });
+            let sdkdir = core.getInput('sdkdir', { required: false });
             const version = core.getInput('version', { required: false });
             const buildList = core.getInput('build_list', { required: false });
             const target = core.getInput('target', { required: false });
             const customTarget = core.getInput('custom_target', { required: false });
             const aqatestsRepo = core.getInput('aqa-testsRepo', { required: false });
-            const aqasystemtestsRepo = core.getInput('aqa-systemtestsRepo', { required: false });
+            const aqasystemtestsRepo = core.getInput('aqa-systemtestsRepo', {
+                required: false
+            });
             const openj9Repo = core.getInput('openj9_repo', { required: false });
             const tkgRepo = core.getInput('tkg_Repo', { required: false });
             const vendorTestRepos = core.getInput('vendor_testRepos', { required: false });
@@ -2967,8 +2973,10 @@ function run() {
             //  let arch = core.getInput("architecture", { required: false })
             if (jdksource !== 'upstream' &&
                 jdksource !== 'github-hosted' &&
-                jdksource !== 'install-jdk') {
-                core.error(`jdksource should be one of [upstream, github-hosted, install-jdk]. Found: ${jdksource}`);
+                jdksource !== 'install-jdk' &&
+                jdksource !== 'nightly' &&
+                jdksource !== 'customized') {
+                core.error(`jdksource should be one of [upstream, github-hosted, install-jdk, nightly, customized]. Found: ${jdksource}`);
             }
             if (buildList !== 'openjdk' &&
                 !buildList.startsWith('external') &&
@@ -2977,7 +2985,8 @@ function run() {
                 !buildList.startsWith('system')) {
                 core.setFailed(`buildList should be one of or sub dir of [openjdk, external, functional, system, perf]. Found: ${buildList}`);
             }
-            if (jdksource !== 'upstream' && version.length === 0) {
+            if ((jdksource === 'github-hosted' || jdksource === 'install-jdk') &&
+                version.length === 0) {
                 core.setFailed('Please provide jdkversion if jdksource is github-hosted installed or AdoptOpenJKD/install-jdk installed.');
             }
             if (vendorTestRepos !== '') {
@@ -2992,7 +3001,10 @@ function run() {
             if (vendorTestShas !== '') {
                 vendorTestParams += ` --vendor_shas ${vendorTestShas}`;
             }
-            yield runaqa.runaqaTest(version, jdksource, buildList, target, customTarget, aqatestsRepo, openj9Repo, tkgRepo, vendorTestParams, aqasystemtestsRepo);
+            if (sdkdir === '') {
+                sdkdir = process.cwd();
+            }
+            yield runaqa.runaqaTest(version, jdksource, customizedSdkUrl, sdkdir, buildList, target, customTarget, aqatestsRepo, openj9Repo, tkgRepo, vendorTestParams, aqasystemtestsRepo);
         }
         catch (error) {
             core.setFailed(error.message);
@@ -3394,15 +3406,23 @@ if (!tempDirectory) {
     }
     tempDirectory = path.join(baseLocation, 'actions', 'temp');
 }
-function runaqaTest(version, jdksource, buildList, target, customTarget, aqatestsRepo, openj9Repo, tkgRepo, vendorTestParams, aqasystemtestsRepo) {
+function runaqaTest(version, jdksource, customizedSdkUrl, sdkdir, buildList, target, customTarget, aqatestsRepo, openj9Repo, tkgRepo, vendorTestParams, aqasystemtestsRepo) {
     return __awaiter(this, void 0, void 0, function* () {
         yield installDependencyAndSetup();
         setSpec();
         process.env.BUILD_LIST = buildList;
-        if (!('TEST_JDK_HOME' in process.env))
+        if ((jdksource === 'upstream' ||
+            jdksource === 'github-hosted' ||
+            jdksource === 'install-jdk') &&
+            !('TEST_JDK_HOME' in process.env)) {
             process.env.TEST_JDK_HOME = getTestJdkHome(version, jdksource);
+        }
+        if (!('TEST_JDK_HOME' in process.env)) {
+            process.env.TEST_JDK_HOME = `${sdkdir}/openjdkbinary/j2sdk-image`;
+        }
         yield getAqaTestsRepo(aqatestsRepo);
-        yield runGetSh(tkgRepo, openj9Repo, vendorTestParams);
+        yield runGetSh(tkgRepo, openj9Repo, vendorTestParams, jdksource, customizedSdkUrl, sdkdir);
+        resetJDKHomeFromProperties();
         //Get Dependencies, using /*zip*/dependents.zip to avoid loop every available files
         let dependents = yield tc.downloadTool('https://ci.adoptopenjdk.net/view/all/job/test.getDependency/lastSuccessfulBuild/artifact//*zip*/dependents.zip');
         let sevenzexe = '7z';
@@ -3451,6 +3471,24 @@ function runaqaTest(version, jdksource, buildList, target, customTarget, aqatest
     });
 }
 exports.runaqaTest = runaqaTest;
+function resetJDKHomeFromProperties() {
+    const pfile = `${process.env.GITHUB_WORKSPACE}/aqa-tests/job.properties`;
+    if (fs.existsSync(pfile)) {
+        const lines = fs
+            .readFileSync(pfile, 'utf-8')
+            .replace(/\r\n/g, '\n')
+            .split('\n')
+            .filter(Boolean);
+        for (const l of lines) {
+            const regexp = /TEST_JDK_HOME=(.*)/;
+            const match = regexp.exec(l);
+            if (match && match[1]) {
+                process.env.TEST_JDK_HOME = match[1];
+                core.info(`Reset TEST_JDK_HOME from ${process.env.TEST_JDK_HOME}`);
+            }
+        }
+    }
+}
 function getTestJdkHome(version, jdksource) {
     // Try JAVA_HOME first and then fall back to GITHUB actions default location
     let javaHome = process.env[`JAVA_HOME_${version}_X64`];
@@ -3568,7 +3606,7 @@ function getAqaSystemTestsRepo(aqasystemtestsRepo) {
     process.env.ADOPTOPENJDK_SYSTEMTEST_REPO = repoBranch[0];
     process.env.ADOPTOPENJDK_SYSTEMTEST_BRANCH = repoBranch[1];
 }
-function runGetSh(tkgRepo, openj9Repo, vendorTestParams) {
+function runGetSh(tkgRepo, openj9Repo, vendorTestParams, jdksource, customizedSdkUrl, sdkdir) {
     return __awaiter(this, void 0, void 0, function* () {
         let parameters = '';
         if (tkgRepo.length !== 0) {
@@ -3578,6 +3616,15 @@ function runGetSh(tkgRepo, openj9Repo, vendorTestParams) {
         if (openj9Repo.length !== 0) {
             const repoBranch = parseRepoBranch(openj9Repo);
             parameters += ` --openj9_branch ${repoBranch[1]} --openj9_repo https://github.com/${repoBranch[0]}.git`;
+        }
+        if (jdksource.length !== 0) {
+            parameters += ` --sdk_resource ${jdksource}`;
+        }
+        if (customizedSdkUrl.length !== 0) {
+            parameters += ` --customizedURL ${customizedSdkUrl}`;
+        }
+        if (sdkdir.length !== 0) {
+            parameters += ` --sdkdir ${sdkdir}`;
         }
         if (IS_WINDOWS) {
             yield exec.exec(`bash ./get.sh ${parameters} ${vendorTestParams}`);

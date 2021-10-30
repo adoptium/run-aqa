@@ -26,6 +26,8 @@ if (!tempDirectory) {
 export async function runaqaTest(
   version: string,
   jdksource: string,
+  customizedSdkUrl: string,
+  sdkdir: string,
   buildList: string,
   target: string,
   customTarget: string,
@@ -38,11 +40,30 @@ export async function runaqaTest(
   await installDependencyAndSetup()
   setSpec()
   process.env.BUILD_LIST = buildList
-  if (!('TEST_JDK_HOME' in process.env))
+  if (
+    (jdksource === 'upstream' ||
+      jdksource === 'github-hosted' ||
+      jdksource === 'install-jdk') &&
+    !('TEST_JDK_HOME' in process.env)
+  ) {
     process.env.TEST_JDK_HOME = getTestJdkHome(version, jdksource)
+  }
+
+  if (!('TEST_JDK_HOME' in process.env)) {
+    process.env.TEST_JDK_HOME = `${sdkdir}/openjdkbinary/j2sdk-image`
+  }
 
   await getAqaTestsRepo(aqatestsRepo)
-  await runGetSh(tkgRepo, openj9Repo, vendorTestParams)
+  await runGetSh(
+    tkgRepo,
+    openj9Repo,
+    vendorTestParams,
+    jdksource,
+    customizedSdkUrl,
+    sdkdir
+  )
+
+  resetJDKHomeFromProperties()
 
   //Get Dependencies, using /*zip*/dependents.zip to avoid loop every available files
   let dependents = await tc.downloadTool(
@@ -102,6 +123,25 @@ export async function runaqaTest(
   }
   if (myOutput.includes('FAILED test targets') === true) {
     core.setFailed('There are failed tests')
+  }
+}
+
+function resetJDKHomeFromProperties(): void {
+  const pfile = `${process.env.GITHUB_WORKSPACE}/aqa-tests/job.properties`
+  if (fs.existsSync(pfile)) {
+    const lines = fs
+      .readFileSync(pfile, 'utf-8')
+      .replace(/\r\n/g, '\n')
+      .split('\n')
+      .filter(Boolean)
+    for (const l of lines) {
+      const regexp = /TEST_JDK_HOME=(.*)/
+      const match = regexp.exec(l)
+      if (match && match[1]) {
+        process.env.TEST_JDK_HOME = match[1]
+        core.info(`Reset TEST_JDK_HOME to ${process.env.TEST_JDK_HOME}`)
+      }
+    }
   }
 }
 
@@ -242,7 +282,10 @@ function getAqaSystemTestsRepo(aqasystemtestsRepo: string): void {
 async function runGetSh(
   tkgRepo: string,
   openj9Repo: string,
-  vendorTestParams: string
+  vendorTestParams: string,
+  jdksource: string,
+  customizedSdkUrl: string,
+  sdkdir: string
 ): Promise<void> {
   let parameters = ''
   if (tkgRepo.length !== 0) {
@@ -253,7 +296,15 @@ async function runGetSh(
     const repoBranch = parseRepoBranch(openj9Repo)
     parameters += ` --openj9_branch ${repoBranch[1]} --openj9_repo https://github.com/${repoBranch[0]}.git`
   }
-
+  if (jdksource.length !== 0) {
+    parameters += ` --sdk_resource ${jdksource}`
+  }
+  if (customizedSdkUrl.length !== 0) {
+    parameters += ` --customizedURL ${customizedSdkUrl}`
+  }
+  if (sdkdir.length !== 0) {
+    parameters += ` --sdkdir ${sdkdir}`
+  }
   if (IS_WINDOWS) {
     await exec.exec(`bash ./get.sh ${parameters} ${vendorTestParams}`)
   } else {
