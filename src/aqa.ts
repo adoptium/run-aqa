@@ -4,6 +4,10 @@ import * as runaqa from './runaqa'
 async function run(): Promise<void> {
   try {
     const jdksource = core.getInput('jdksource', {required: false})
+    const customizedSdkUrl = core.getInput('customizedSdkUrl', {
+      required: false
+    })
+    let sdkdir = core.getInput('sdkdir', {required: false})
     const version = core.getInput('version', {required: false})
     const buildList = core.getInput('build_list', {required: false})
     const target = core.getInput('target', {required: false})
@@ -26,10 +30,12 @@ async function run(): Promise<void> {
     if (
       jdksource !== 'upstream' &&
       jdksource !== 'github-hosted' &&
-      jdksource !== 'install-jdk'
+      jdksource !== 'install-jdk' &&
+      jdksource !== 'nightly' &&
+      jdksource !== 'customized'
     ) {
       core.error(
-        `jdksource should be one of [upstream, github-hosted, install-jdk]. Found: ${jdksource}`
+        `jdksource should be one of [upstream, github-hosted, install-jdk, nightly, customized]. Found: ${jdksource}`
       )
     }
 
@@ -44,7 +50,10 @@ async function run(): Promise<void> {
         `buildList should be one of or sub dir of [openjdk, external, functional, system, perf]. Found: ${buildList}`
       )
     }
-    if (jdksource !== 'upstream' && version.length === 0) {
+    if (
+      (jdksource === 'github-hosted' || jdksource === 'install-jdk') &&
+      version.length === 0
+    ) {
       core.setFailed(
         'Please provide jdkversion if jdksource is github-hosted installed or AdoptOpenJKD/install-jdk installed.'
       )
@@ -61,9 +70,14 @@ async function run(): Promise<void> {
     if (vendorTestShas !== '') {
       vendorTestParams += ` --vendor_shas ${vendorTestShas}`
     }
+    if (sdkdir === '') {
+      sdkdir = process.cwd()
+    }
     await runaqa.runaqaTest(
       version,
       jdksource,
+      customizedSdkUrl,
+      sdkdir,
       buildList,
       target,
       customTarget,
