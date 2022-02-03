@@ -92,12 +92,17 @@ You can also:
 | build_list | openjdk |
 | target | _jdk_math |
 <<<<<<< HEAD
+<<<<<<< HEAD
 | custom_target |  |
 =======
 >>>>>>> 0aaf44c (Update README.md)
+=======
+| custom_target |  |
+>>>>>>> 43100af (support custom_target)
 | jdksource | upstream |
 | aqa-testsRepo |  |
 | tkg_Repo |  |
+
 
 ### version
 The Java version that tests are running against (Supported values are: 8, 9, 10, 11, 12, 13, ...)

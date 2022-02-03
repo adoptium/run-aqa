@@ -15,6 +15,7 @@ inputs:
     description: 
     default: '_jdk_math'
 <<<<<<< HEAD
+<<<<<<< HEAD
   custom_target:   #  Used if need to set non-default custom target
     description:
     required: false
@@ -48,6 +49,9 @@ inputs:
       required: false
 =======
   custom_target:
+=======
+  custom_target:   #  Used if need to set non-default custom target
+>>>>>>> 43100af (support custom_target)
     description:
     required: false
 >>>>>>> 79a6303 (support custom_target)

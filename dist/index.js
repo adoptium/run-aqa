@@ -3412,11 +3412,14 @@ const isWindows = process.platform === 'win32';
 function runaqaTest(version, jdksource, buildList, target, customTarget) {
     return __awaiter(this, void 0, void 0, function* () {
         yield installDependency();
+<<<<<<< HEAD
         let customOption = '';
         if (target.includes('custom') && customTarget !== '') {
             customOption = `${target.toUpperCase()}_TARGET=${customTarget}`;
         }
 >>>>>>> 79a6303 (support custom_target)
+=======
+>>>>>>> 43100af (support custom_target)
         process.env.BUILD_LIST = buildList;
         if (!('TEST_JDK_HOME' in process.env))
             process.env.TEST_JDK_HOME = getTestJdkHome(version, jdksource);
@@ -3452,18 +3455,26 @@ function runaqaTest(version, jdksource, buildList, target, customTarget) {
         try {
             yield exec.exec('make compile');
 <<<<<<< HEAD
+<<<<<<< HEAD
             if (target.includes('custom') && customTarget !== '') {
                 const customOption = `${target
                     .substr(1)
                     .toUpperCase()}_TARGET=${customTarget}`;
+=======
+            if (target.includes('custom') && customTarget !== '') {
+                const customOption = `${target.substr(1).toUpperCase()}_TARGET=${customTarget}`;
+>>>>>>> 43100af (support custom_target)
                 yield exec.exec('make', [`${target}`, `${customOption}`], options);
             }
             else {
                 yield exec.exec('make', [`${target}`], options);
             }
+<<<<<<< HEAD
 =======
             yield exec.exec('make', [`${target} ${customOption}`], options);
 >>>>>>> 79a6303 (support custom_target)
+=======
+>>>>>>> 43100af (support custom_target)
         }
         catch (error) {
             core.setFailed(error.message);
