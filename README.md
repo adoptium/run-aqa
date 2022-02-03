@@ -91,7 +91,10 @@ You can also:
 | version | 8 |
 | build_list | openjdk |
 | target | _jdk_math |
+<<<<<<< HEAD
 | custom_target |  |
+=======
+>>>>>>> 0aaf44c (Update README.md)
 | jdksource | upstream |
 | aqa-testsRepo |  |
 | tkg_Repo |  |
