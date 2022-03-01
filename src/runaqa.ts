@@ -314,5 +314,11 @@ async function runGetSh(
 
 function parseRepoBranch(repoBranch: string): string[] {
   const tempRepo = repoBranch.replace(/\s/g, '')
-  return tempRepo.split(':')
+  var slashIndexCheck = tempRepo.indexOf( "/" )
+  var colonIndexCheck = tempRepo.indexOf( ":" )
+  if(slashIndexCheck>0 && colonIndexCheck>0 && slashIndexCheck<colonIndexCheck) {
+    return tempRepo.split(':')
+  } else  {
+    return "Error in string parameter format. Required form: 'octocat/projectnames:branch' "
+  }
 }
