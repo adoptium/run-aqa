@@ -1,5 +1,8 @@
 name: 'Running AQA test'
 description: 'Running AQA test'
+branding:
+  icon: 'check'
+  color: 'purple'
 author: 'Sophia Guo'
 inputs:
   jdksource:      # upstream, github-hosted, install-jdk, nightly, customized
