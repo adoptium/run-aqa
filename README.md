@@ -8,21 +8,21 @@ See [action.yml](https://github.com/adoptium/run-aqa/blob/master/action.yml)
 
 ## Default upstream action build JDK: run openjdk test _jdk_math against upstream action build JDK
 
-```
-    steps:
-    - uses: actions/checkout@v1
-     - name: Build Openj9 JDK
-       id: buildOpenj9
-       uses: eclipse/build-openj9@v1
-       with:
-         version: '8'
-    - name: AQA
-      uses: adoptium/run-aqa@v1
-      env:
-         TEST_JDK_HOME: ${{ steps.buildOpenj9.outputs.BuildOpenJ9JDK }}
-      with: 
-        build_list: 'openjdk'
-        target: '_jdk_math'
+```yaml
+steps:
+- uses: actions/checkout@v1
+ - name: Build Openj9 JDK
+   id: buildOpenj9
+   uses: eclipse/build-openj9@v1
+   with:
+     version: '8'
+- name: AQA
+  uses: adoptium/run-aqa@v1
+  env:
+     TEST_JDK_HOME: ${{ steps.buildOpenj9.outputs.BuildOpenJ9JDK }}
+  with: 
+    build_list: 'openjdk'
+    target: '_jdk_math'
 ```
 You can also:
   - run functional, external, system, perf tests
@@ -31,57 +31,57 @@ You can also:
 ## Customized JDK
 ### run openjdk test _jdk_math against customized JDK, jdk setup by [actions/setup-java](https://github.com/actions/setup-java)
 
-```
-    - uses: actions/setup-java@v1
-      with:
-        java-version: '11' # The JDK version to make available on the path.
-    - name: AQA
-      uses: adoptium/run-aqa@v1
-      with: 
-        version: '11'
-        jdksource: 'customized'
-        build_list: 'openjdk'
-        target: '_jdk_math'
+```yaml
+- uses: actions/setup-java@v1
+  with:
+    java-version: '11' # The JDK version to make available on the path.
+- name: AQA
+  uses: adoptium/run-aqa@v1
+  with: 
+    version: '11'
+    jdksource: 'customized'
+    build_list: 'openjdk'
+    target: '_jdk_math'
  ```
 ### run openjdk test _jdk_math against customized JDK, jdk installed by [AdoptOpenJDK/install-jdk](https://github.com/AdoptOpenJDK/install-jdk) using JDKs are downloaded from AdoptOpenJDK
 
-```
-    - uses: AdoptOpenJDK/install-jdk@v1
-      with:
-        version: '11'
-        targets: 'JDK_11'
-        impl: 'openj9'
-    - name: AQA
-      uses: adoptium/run-aqa@v1
-      with: 
-        version: '11'
-        jdksource: 'customized'
-        build_list: 'openjdk'
-        target: '_jdk_math'
+```yaml
+- uses: AdoptOpenJDK/install-jdk@v1
+  with:
+    version: '11'
+    targets: 'JDK_11'
+    impl: 'openj9'
+- name: AQA
+  uses: adoptium/run-aqa@v1
+  with: 
+    version: '11'
+    jdksource: 'customized'
+    build_list: 'openjdk'
+    target: '_jdk_math'
  ```
 
 ## Github-hosted JDK: run openjdk test _jdk_math against installed JDK on Github-hosted virtual machine
 
-```
-    steps:
-    - uses: actions/checkout@v1
-    - name: AQA
-      uses: adoptium/run-aqa@v1
-      with: 
-        version: '11'
-        jdksource: 'github-hosted'
-        build_list: 'openjdk'
-        target: '_jdk_math'
+```yaml
+steps:
+- uses: actions/checkout@v1
+- name: AQA
+  uses: adoptium/run-aqa@v1
+  with: 
+    version: '11'
+    jdksource: 'github-hosted'
+    build_list: 'openjdk'
+    target: '_jdk_math'
 ```
 
 ## Work with [upload-artifact](https://github.com/actions/upload-artifact) to upload test outputs if there are test failures
 
-```
-    - uses: actions/upload-artifact@v2-preview
-      if: failure()
-      with:
-        name: test_output
-        path: ./**/test_output_*/
+```yaml
+- uses: actions/upload-artifact@v2-preview
+  if: failure()
+  with:
+    name: test_output
+    path: ./**/test_output_*/
 ```
 
 ## Configuration:
