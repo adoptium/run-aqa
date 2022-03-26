@@ -11,7 +11,7 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-2016]
         version: [8, 11, 17]
-        impl: [hotspot, openj9]
+        impl: [hotspot]
         buildlist: [openjdk, system, functional]
     steps:
     - uses: actions/checkout@v1
