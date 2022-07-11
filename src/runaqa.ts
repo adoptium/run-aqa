@@ -68,9 +68,14 @@ export async function runaqaTest(
         .toUpperCase()}_TARGET=${customTarget}`
       await exec.exec('make', [`${target}`, `${customOption}`], options)
     }
-    else if (target.startsWith('-f')){
-      // move the parallelList to TKG
-      await exec.exec(`mv ${process.env.GITHUB_WORKSPACE}/parallelList.mk ${process.env.GITHUB_WORKSPACE}/aqa-tests/TKG/parallelList.mk`);
+    else if (target.includes('-f parallelList.mk')){
+      // move the parallelList to TKG/
+      if (IS_WINDOWS){
+        await exec.exec(`move ${process.env.GITHUB_WORKSPACE}\\parallelList.mk ${process.env.GITHUB_WORKSPACE}\\aqa-tests\\TKG\\parallelList.mk`);
+      }
+      else{
+        await exec.exec(`mv ${process.env.GITHUB_WORKSPACE}/parallelList.mk ${process.env.GITHUB_WORKSPACE}/aqa-tests/TKG/parallelList.mk`);
+      }
       // Run the test
       await exec.exec(`make ${target}`);
    } else {
