@@ -50,6 +50,9 @@ inputs:
   vendor_testShas:
       description: 'Comma-separated list of vendor SHAs'
       required: false
+  run_parallel:
+      description: 'Run jobs in parallel'
+      required: false
 runs:
   using: 'node12'
   main: 'dist/index.js'
