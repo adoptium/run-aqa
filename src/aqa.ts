@@ -24,7 +24,8 @@ async function run(): Promise<void> {
     })
     const vendorTestDirs = core.getInput('vendor_testDirs', {required: false})
     const vendorTestShas = core.getInput('vendor_testShas', {required: false})
-
+    const runParallel = core.getInput('run_parallel', {required: false})
+    
     let vendorTestParams = ''
     //  let arch = core.getInput("architecture", { required: false })
     if (
@@ -73,22 +74,43 @@ async function run(): Promise<void> {
     if (sdkdir === '') {
       sdkdir = process.cwd()
     }
-    await runaqa.runaqaTest(
-      version,
-      jdksource,
-      customizedSdkUrl,
-      sdkdir,
-      buildList,
-      target,
-      customTarget,
-      aqatestsRepo,
-      openj9Repo,
-      tkgRepo,
-      vendorTestParams,
-      aqasystemtestsRepo
-    )
+    if(runParallel === 'true'){
+      await runaqa.setupParallelEnv(
+        version,
+        jdksource,
+        customizedSdkUrl,
+        sdkdir,
+        buildList,
+        aqatestsRepo,
+        openj9Repo,
+        tkgRepo,
+        vendorTestParams,
+        aqasystemtestsRepo
+      )
+    }
+    else{
+      await runaqa.runaqaTest(
+        version,
+        jdksource,
+        customizedSdkUrl,
+        sdkdir,
+        buildList,
+        target,
+        customTarget,
+        aqatestsRepo,
+        openj9Repo,
+        tkgRepo,
+        vendorTestParams,
+        aqasystemtestsRepo
+      )
+    }
   } catch (error) {
-    core.setFailed(error.message)
+    if (error instanceof Error){
+      core.setFailed(error.message)
+    }
+    else{
+      core.setFailed('Unexpected error')
+    }
   }
 }
 

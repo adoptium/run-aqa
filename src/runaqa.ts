@@ -37,68 +37,19 @@ export async function runaqaTest(
   vendorTestParams: string,
   aqasystemtestsRepo: string
 ): Promise<void> {
-  await installDependencyAndSetup()
-  setSpec()
-  process.env.BUILD_LIST = buildList
-  if (
-    (jdksource === 'upstream' ||
-      jdksource === 'github-hosted' ||
-      jdksource === 'install-jdk') &&
-    !('TEST_JDK_HOME' in process.env)
-  ) {
-    process.env.TEST_JDK_HOME = getTestJdkHome(version, jdksource)
-  }
 
-  if (!('TEST_JDK_HOME' in process.env)) {
-    process.env.TEST_JDK_HOME = `${sdkdir}/openjdkbinary/j2sdk-image`
-  }
-
-  await getAqaTestsRepo(aqatestsRepo)
-  await runGetSh(
-    tkgRepo,
-    openj9Repo,
-    vendorTestParams,
+  await setupTestEnv(
+    version,
     jdksource,
     customizedSdkUrl,
-    sdkdir
-  )
-
-  resetJDKHomeFromProperties()
-
-  //Get Dependencies, using /*zip*/dependents.zip to avoid loop every available files
-  let dependents = await tc.downloadTool(
-    'https://ci.adoptopenjdk.net/view/all/job/test.getDependency/lastSuccessfulBuild/artifact//*zip*/dependents.zip'
-  )
-
-  let sevenzexe = '7z'
-  if (fs.existsSync('/usr/bin/yum')) {
-    sevenzexe = '7za'
-  }
-
-  // Test.dependency only has one level of archive directory, none of actions toolkit support mv files by regex. Using 7zip discards the directory directly
-  await exec.exec(
-    `${sevenzexe} e ${dependents} -o${process.env.GITHUB_WORKSPACE}/aqa-tests/TKG/lib`
-  )
-
-  if (buildList.includes('system')) {
-    if (aqasystemtestsRepo && aqasystemtestsRepo.length !== 0) {
-      getAqaSystemTestsRepo(aqasystemtestsRepo)
-    }
-    dependents = await tc.downloadTool(
-      'https://ci.adoptopenjdk.net/view/all/job/systemtest.getDependency/lastSuccessfulBuild/artifact/*zip*/dependents.zip'
-    )
-    // System.dependency has different levels of archive structures archive/systemtest_prereqs/*.*
-    // None of io.mv, io.cp and exec.exec can mv directories as expected (mv archive/ ./). Move subfolder systemtest_prereqs instead.
-    const dependentPath = await tc.extractZip(
-      dependents,
-      `${process.env.GITHUB_WORKSPACE}/`
-    )
-    await io.mv(
-      `${dependentPath}/archive/systemtest_prereqs`,
-      `${process.env.GITHUB_WORKSPACE}/aqa-tests`
-    )
-    await io.rmRF(`${dependentPath}/archive`)
-  }
+    sdkdir,
+    buildList,
+    aqatestsRepo,
+    openj9Repo,
+    tkgRepo,
+    vendorTestParams,
+    aqasystemtestsRepo
+    );
 
   const options: ExecOptions = {}
   let myOutput = ''
@@ -110,16 +61,28 @@ export async function runaqaTest(
   process.chdir('TKG')
   try {
     await exec.exec('make compile')
+
     if (target.includes('custom') && customTarget !== '') {
       const customOption = `${target
         .substr(1)
         .toUpperCase()}_TARGET=${customTarget}`
       await exec.exec('make', [`${target}`, `${customOption}`], options)
-    } else {
+    }
+    else if (target.startsWith('-f')){
+      // move the parallelList to TKG
+      await exec.exec(`mv ${process.env.GITHUB_WORKSPACE}/parallelList.mk ${process.env.GITHUB_WORKSPACE}/aqa-tests/TKG/parallelList.mk`);
+      // Run the test
+      await exec.exec(`make ${target}`);
+   } else {
       await exec.exec('make', [`${target}`], options)
     }
   } catch (error) {
-    core.setFailed(error.message)
+    if (error instanceof Error){
+      core.setFailed(error.message)
+    }
+    else{
+      core.setFailed('Unexpected error')
+    }
   }
   if (myOutput.includes('FAILED test targets') === true) {
     core.setFailed('There are failed tests')
@@ -192,7 +155,12 @@ async function installDependencyAndSetup(): Promise<void> {
         core.addPath(`C:\\cygwin64\\bin`)
       }
     } catch (error) {
-      core.warning(error.message)
+      if (error instanceof Error){
+        core.warning(error.message)
+      }
+      else{
+        core.warning('Unexpected error')
+      }
     }
     const antContribFile = await tc.downloadTool(
       `https://sourceforge.net/projects/ant-contrib/files/ant-contrib/ant-contrib-1.0b2/ant-contrib-1.0b2-bin.zip/download`
@@ -312,6 +280,77 @@ async function runGetSh(
   }
 }
 
+export async function setupParallelEnv(
+  version: string,
+  jdksource: string,
+  customizedSdkUrl: string,
+  sdkdir: string,
+  buildList: string,
+  aqatestsRepo: string,
+  openj9Repo: string,
+  tkgRepo: string,
+  vendorTestParams: string,
+  aqasystemtestsRepo: string
+): Promise<void> {
+
+  await setupTestEnv(version, jdksource, customizedSdkUrl, sdkdir, buildList, aqatestsRepo, openj9Repo, tkgRepo, vendorTestParams, aqasystemtestsRepo);
+  process.chdir('TKG');
+  process.env.PARALLEL_OPTIONS = `PARALLEL_OPTIONS=TEST=${buildList} TEST_TIME= NUM_MACHINES=3`;
+  await exec.exec(`make genParallelList ${process.env.PARALLEL_OPTIONS}`);
+
+}
+
+async function setupTestEnv(
+  version: string,
+  jdksource: string,
+  customizedSdkUrl: string,
+  sdkdir: string,
+  buildList: string,
+  aqatestsRepo: string,
+  openj9Repo: string,
+  tkgRepo: string,
+  vendorTestParams: string,
+  aqasystemtestsRepo: string
+  ):  Promise<void>{
+    await installDependencyAndSetup();
+    setSpec();
+    process.env.BUILD_LIST = buildList;
+    if ((jdksource === 'upstream' ||
+        jdksource === 'github-hosted' ||
+        jdksource === 'install-jdk') &&
+        !('TEST_JDK_HOME' in process.env)) {
+        process.env.TEST_JDK_HOME = getTestJdkHome(version, jdksource);
+    }
+    if (!('TEST_JDK_HOME' in process.env)) {
+        process.env.TEST_JDK_HOME = `${sdkdir}/openjdkbinary/j2sdk-image`;
+    }
+
+    await getAqaTestsRepo(aqatestsRepo);
+    await runGetSh(tkgRepo, openj9Repo, vendorTestParams, jdksource, customizedSdkUrl, sdkdir);
+    resetJDKHomeFromProperties();
+
+    //Get Dependencies, using /*zip*/dependents.zip to avoid loop every available files
+    let dependents = await tc.downloadTool('https://ci.adoptopenjdk.net/view/all/job/test.getDependency/lastSuccessfulBuild/artifact//*zip*/dependents.zip');
+    let sevenzexe = '7z';
+    if (fs.existsSync('/usr/bin/yum')) {
+        sevenzexe = '7za';
+    }
+
+    // Test.dependency only has one level of archive directory, none of actions toolkit support mv files by regex. Using 7zip discards the directory directly
+    await exec.exec(`${sevenzexe} e -y ${dependents} -o${process.env.GITHUB_WORKSPACE}/aqa-tests/TKG/lib`);
+    if (buildList.includes('system')) {
+        if (aqasystemtestsRepo && aqasystemtestsRepo.length !== 0) {
+            getAqaSystemTestsRepo(aqasystemtestsRepo);
+        }
+        dependents = await tc.downloadTool('https://ci.adoptopenjdk.net/view/all/job/systemtest.getDependency/lastSuccessfulBuild/artifact/*zip*/dependents.zip');
+        // System.dependency has different levels of archive structures archive/systemtest_prereqs/*.*
+        // None of io.mv, io.cp and exec.exec can mv directories as expected (mv archive/ ./). Move subfolder systemtest_prereqs instead.
+        const dependentPath = await tc.extractZip(dependents, `${process.env.GITHUB_WORKSPACE}/`);
+        await io.mv(`${dependentPath}/archive/systemtest_prereqs`, `${process.env.GITHUB_WORKSPACE}/aqa-tests`);
+        await io.rmRF(`${dependentPath}/archive`);
+    }
+}
+
 function parseRepoBranch(repoBranch: string): string[] {
   const tempRepo = repoBranch.replace(/\s/g, '')
   var slashIndexCheck = tempRepo.indexOf( "/" )
@@ -319,6 +358,6 @@ function parseRepoBranch(repoBranch: string): string[] {
   if(slashIndexCheck>0 && colonIndexCheck>0 && slashIndexCheck<colonIndexCheck) {
     return tempRepo.split(':')
   } else  {
-    return "Error in string parameter format. Required form: 'octocat/projectnames:branch' "
+    return ["Error in string parameter format. Required form: 'octocat/projectnames:branch' "]
   }
 }
