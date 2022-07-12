@@ -167,7 +167,7 @@ async function installDependencyAndSetup(): Promise<void> {
         core.warning('Unexpected error')
       }
     }
-    const antContribFile = await tc.downloadTool(
+    const antContribFile = await tc.downloadTool( 
       `https://sourceforge.net/projects/ant-contrib/files/ant-contrib/ant-contrib-1.0b2/ant-contrib-1.0b2-bin.zip/download`
     )
     await tc.extractZip(`${antContribFile}`, `${tempDirectory}`)
@@ -295,12 +295,13 @@ export async function setupParallelEnv(
   openj9Repo: string,
   tkgRepo: string,
   vendorTestParams: string,
-  aqasystemtestsRepo: string
+  aqasystemtestsRepo: string,
+  numMachines: string
 ): Promise<void> {
 
   await setupTestEnv(version, jdksource, customizedSdkUrl, sdkdir, buildList, aqatestsRepo, openj9Repo, tkgRepo, vendorTestParams, aqasystemtestsRepo);
   process.chdir('TKG');
-  process.env.PARALLEL_OPTIONS = `PARALLEL_OPTIONS=TEST=${buildList} TEST_TIME= NUM_MACHINES=3`;
+  process.env.PARALLEL_OPTIONS = `PARALLEL_OPTIONS=TEST=${buildList} TEST_TIME= NUM_MACHINES=${numMachines}`;
   await exec.exec(`make genParallelList ${process.env.PARALLEL_OPTIONS}`);
 
 }

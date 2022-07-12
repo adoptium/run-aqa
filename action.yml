@@ -53,6 +53,9 @@ inputs:
   run_parallel:
       description: 'Run jobs in parallel'
       required: false
+  num_machines:
+      description: 'Number of machines to run parallel'
+      required: false
 runs:
   using: 'node12'
   main: 'dist/index.js'
