@@ -71,10 +71,15 @@ export async function runaqaTest(
     else if (target.includes('-f parallelList.mk')){
       // move the parallelList to TKG/
       if (IS_WINDOWS){
-        await exec.exec(`move ${process.env.GITHUB_WORKSPACE}\\parallelList.mk ${process.env.GITHUB_WORKSPACE}\\aqa-tests\\TKG\\parallelList.mk`);
-      }
-      else{
-        await exec.exec(`mv ${process.env.GITHUB_WORKSPACE}/parallelList.mk ${process.env.GITHUB_WORKSPACE}/aqa-tests/TKG/parallelList.mk`);
+        await io.cp(
+          `${process.env.GITHUB_WORKSPACE}\\parallelList.mk`,
+          `${process.env.GITHUB_WORKSPACE}\\aqa-tests\\TKG\\parallelList.mk`
+        )
+      } else {
+        await io.cp(
+          `${process.env.GITHUB_WORKSPACE}/parallelList.mk`,
+          `${process.env.GITHUB_WORKSPACE}/aqa-tests/TKG/parallelList.mk`
+        )
       }
       // Run the test
       await exec.exec(`make ${target}`);

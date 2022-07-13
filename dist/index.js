@@ -207,10 +207,10 @@ function runaqaTest(version, jdksource, customizedSdkUrl, sdkdir, buildList, tar
             else if (target.includes('-f parallelList.mk')) {
                 // move the parallelList to TKG/
                 if (IS_WINDOWS) {
-                    yield exec.exec(`move ${process.env.GITHUB_WORKSPACE}\\parallelList.mk ${process.env.GITHUB_WORKSPACE}\\aqa-tests\\TKG\\parallelList.mk`);
+                    yield io.cp(`${process.env.GITHUB_WORKSPACE}\\parallelList.mk`, `${process.env.GITHUB_WORKSPACE}\\aqa-tests\\TKG\\parallelList.mk`);
                 }
                 else {
-                    yield exec.exec(`mv ${process.env.GITHUB_WORKSPACE}/parallelList.mk ${process.env.GITHUB_WORKSPACE}/aqa-tests/TKG/parallelList.mk`);
+                    yield io.cp(`${process.env.GITHUB_WORKSPACE}/parallelList.mk`, `${process.env.GITHUB_WORKSPACE}/aqa-tests/TKG/parallelList.mk`);
                 }
                 // Run the test
                 yield exec.exec(`make ${target}`);
