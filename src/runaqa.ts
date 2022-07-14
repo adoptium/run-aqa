@@ -255,12 +255,13 @@ async function getAqaTestsRepo(aqatestsRepo: string, version: string, buildList:
       process.chdir('system')
       await exec.exec(`git clone -q https://github.com/adoptium/aqa-systemtest.git`)
       await exec.exec(`git clone -q https://github.com/adoptium/STF.git`)
+      process.chdir('../')
     }
     if (buildList == 'openjdk' && version != ''){
       process.chdir('openjdk')
       await exec.exec(`git clone --depth 1 -q --reference-if-able ${process.env.HOME}/openjdk_cache https://github.com/adoptium/jdk${version}.git openjdk-jdk`)
+      process.chdir('../')
     }
-    process.chdir('../')
   }
 }
 

@@ -372,12 +372,13 @@ function getAqaTestsRepo(aqatestsRepo, version, buildList) {
                 process.chdir('system');
                 yield exec.exec(`git clone -q https://github.com/adoptium/aqa-systemtest.git`);
                 yield exec.exec(`git clone -q https://github.com/adoptium/STF.git`);
+                process.chdir('../');
             }
             if (buildList == 'openjdk' && version != '') {
                 process.chdir('openjdk');
                 yield exec.exec(`git clone --depth 1 -q --reference-if-able ${process.env.HOME}/openjdk_cache https://github.com/adoptium/jdk${version}.git openjdk-jdk`);
+                process.chdir('../');
             }
-            process.chdir('../');
         }
     });
 }
