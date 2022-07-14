@@ -358,7 +358,7 @@ function setSpec() {
         process.env['SPEC'] = 'linux_x86-64_cmprssptrs';
     }
 }
-function getAqaTestsRepo(aqatestsRepo) {
+function getAqaTestsRepo(aqatestsRepo, version, buildList) {
     return __awaiter(this, void 0, void 0, function* () {
         let repoBranch = ['adoptium/aqa-tests', 'master'];
         if (aqatestsRepo.length !== 0) {
@@ -366,6 +366,19 @@ function getAqaTestsRepo(aqatestsRepo) {
         }
         yield exec.exec(`git clone --depth 1 -b ${repoBranch[1]} https://github.com/${repoBranch[0]}.git`);
         process.chdir('aqa-tests');
+        // workaround until TKG can download the artifacts required
+        if (IS_WINDOWS && buildList != '') {
+            if (buildList == 'system') {
+                process.chdir('system');
+                yield exec.exec(`git clone -q https://github.com/adoptium/aqa-systemtest.git`);
+                yield exec.exec(`git clone -q https://github.com/adoptium/STF.git`);
+            }
+            if (buildList == 'openjdk' && version != '') {
+                process.chdir('openjdk');
+                yield exec.exec(`git clone --depth 1 -q --reference-if-able ${process.env.HOME}/openjdk_cache https://github.com/adoptium/jdk${version}.git openjdk-jdk`);
+            }
+            process.chdir('../');
+        }
     });
 }
 function getAqaSystemTestsRepo(aqasystemtestsRepo) {
@@ -424,7 +437,7 @@ function setupTestEnv(version, jdksource, customizedSdkUrl, sdkdir, buildList, a
         if (!('TEST_JDK_HOME' in process.env)) {
             process.env.TEST_JDK_HOME = `${sdkdir}/openjdkbinary/j2sdk-image`;
         }
-        yield getAqaTestsRepo(aqatestsRepo);
+        yield getAqaTestsRepo(aqatestsRepo, version, buildList);
         yield runGetSh(tkgRepo, openj9Repo, vendorTestParams, jdksource, customizedSdkUrl, sdkdir);
         resetJDKHomeFromProperties();
         //Get Dependencies, using /*zip*/dependents.zip to avoid loop every available files
