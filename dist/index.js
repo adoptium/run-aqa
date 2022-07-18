@@ -171,13 +171,14 @@ const path = __importStar(__nccwpck_require__(17));
 const fs = __importStar(__nccwpck_require__(147));
 let tempDirectory = process.env['RUNNER_TEMP'] || '';
 const IS_WINDOWS = process.platform === 'win32';
+const IS_MACOS = process.platform === 'darwin';
 if (!tempDirectory) {
     let baseLocation;
     if (IS_WINDOWS) {
         // On windows use the USERPROFILE env variable
         baseLocation = process.env['USERPROFILE'] || 'C:\\';
     }
-    else if (process.platform === 'darwin') {
+    else if (IS_MACOS) {
         baseLocation = '/Users';
     }
     else {
@@ -185,6 +186,20 @@ if (!tempDirectory) {
     }
     tempDirectory = path.join(baseLocation, 'actions', 'temp');
 }
+/**
+ * Runs aqa tests
+ * @param  {string} version JDK Version being tested
+ * @param  {string} jdksource Source for JDK
+ * @param  {[string]} customizedSdkUrl Download link for JDK binaries
+ * @param  {[string]} sdkdir Directory for SDK
+ * @param  {[string]} buildList AQAvit Test suite
+ * @param  {[string]} aqatestsRepo Alternative aqatestRepo
+ * @param  {[string]} openj9Repo Alternative openj9Repo
+ * @param  {[string]} tkgRepo Alternative TKG repo
+ * @param  {[string]} vendorTestParams Vendor provided test parameters
+ * @param  {[string]} aqasystemtestsRepo Alternative AQA-systemtestRepo
+ * @return {[null]}  null
+ */
 function runaqaTest(version, jdksource, customizedSdkUrl, sdkdir, buildList, target, customTarget, aqatestsRepo, openj9Repo, tkgRepo, vendorTestParams, aqasystemtestsRepo) {
     return __awaiter(this, void 0, void 0, function* () {
         yield setupTestEnv(version, jdksource, customizedSdkUrl, sdkdir, buildList, aqatestsRepo, openj9Repo, tkgRepo, vendorTestParams, aqasystemtestsRepo);
@@ -212,7 +227,6 @@ function runaqaTest(version, jdksource, customizedSdkUrl, sdkdir, buildList, tar
                 else {
                     yield io.cp(`${process.env.GITHUB_WORKSPACE}/parallelList.mk`, `${process.env.GITHUB_WORKSPACE}/aqa-tests/TKG/parallelList.mk`);
                 }
-                // Run the test
                 yield exec.exec(`make ${target}`);
             }
             else {
@@ -233,11 +247,15 @@ function runaqaTest(version, jdksource, customizedSdkUrl, sdkdir, buildList, tar
     });
 }
 exports.runaqaTest = runaqaTest;
+/**
+ * Read job.properties and reset TEST_JDK_HOME env variable.
+ * @return {[null]}  null
+ */
 function resetJDKHomeFromProperties() {
-    const pfile = `${process.env.GITHUB_WORKSPACE}/aqa-tests/job.properties`;
-    if (fs.existsSync(pfile)) {
+    const jobProperties = `${process.env.GITHUB_WORKSPACE}/aqa-tests/job.properties`;
+    if (fs.existsSync(jobProperties)) {
         const lines = fs
-            .readFileSync(pfile, 'utf-8')
+            .readFileSync(jobProperties, 'utf-8')
             .replace(/\r\n/g, '\n')
             .split('\n')
             .filter(Boolean);
@@ -251,6 +269,12 @@ function resetJDKHomeFromProperties() {
         }
     }
 }
+/**
+ * Sets javaHome on the runner. Raise exception if not able to be set.
+ * @param  {string} version JDK version
+ * @param  {string} jdksource [description]
+ * @return {[string]}  javaHome    Java home
+ */
 function getTestJdkHome(version, jdksource) {
     // Try JAVA_HOME first and then fall back to GITHUB actions default location
     let javaHome = process.env[`JAVA_HOME_${version}_X64`];
@@ -275,8 +299,11 @@ function getTestJdkHome(version, jdksource) {
     }
     return javaHome;
 }
-// This function is an alternative of extra install step in workflow or alternative install action. This could also be implemented as github action
-function installDependencyAndSetup() {
+/**
+ * This function is an alternative of extra install step in workflow or alternative install action. This could also be implemented as github action
+ * @return {[null]}  null
+ */
+function installPlatformDependencies() {
     return __awaiter(this, void 0, void 0, function* () {
         if (IS_WINDOWS) {
             const cygwinPath = 'C:\\cygwin64';
@@ -306,7 +333,7 @@ function installDependencyAndSetup() {
             yield tc.extractZip(`${antContribFile}`, `${tempDirectory}`);
             yield io.cp(`${tempDirectory}/ant-contrib/lib/ant-contrib.jar`, `${process.env.ANT_HOME}\\lib`);
         }
-        else if (process.platform === 'darwin') {
+        else if (IS_MACOS) {
             yield exec.exec('brew install ant-contrib');
             yield exec.exec('sudo sysctl -w kern.sysv.shmall=655360');
             yield exec.exec('sudo sysctl -w kern.sysv.shmmax=125839605760');
@@ -347,17 +374,28 @@ function installDependencyAndSetup() {
         }
     });
 }
+/**
+ * set required SPEC env variable based on OS type.
+ * @return {[null]} null     [description]
+ */
 function setSpec() {
     if (IS_WINDOWS) {
         process.env['SPEC'] = 'win_x86-64_cmprssptrs';
     }
-    else if (process.platform === 'darwin') {
+    else if (IS_MACOS) {
         process.env['SPEC'] = 'osx_x86-64_cmprssptrs';
     }
     else {
         process.env['SPEC'] = 'linux_x86-64_cmprssptrs';
     }
 }
+/**
+ * Installs aqa-test repository onto the runner.
+ * @param  {string} version JDK version
+ * @param  {[string]} buildList [description]
+ * @param  {[string]} aqatestsRepo Alternative aqatestRepo
+ * @return {[null]} null
+ */
 function getAqaTestsRepo(aqatestsRepo, version, buildList) {
     return __awaiter(this, void 0, void 0, function* () {
         let repoBranch = ['adoptium/aqa-tests', 'master'];
@@ -366,12 +404,12 @@ function getAqaTestsRepo(aqatestsRepo, version, buildList) {
         }
         yield exec.exec(`git clone --depth 1 -b ${repoBranch[1]} https://github.com/${repoBranch[0]}.git`);
         process.chdir('aqa-tests');
-        // workaround until TKG can download the artifacts required
+        // workaround until TKG can download the artifacts required for Windows
         if (IS_WINDOWS && buildList != '') {
             if (buildList == 'system') {
                 process.chdir('system');
-                yield exec.exec(`git clone -q https://github.com/adoptium/aqa-systemtest.git`);
-                yield exec.exec(`git clone -q https://github.com/adoptium/STF.git`);
+                yield exec.exec(`git clone -q https://github.com/adoptium/aqa-systemtest.git`); // points to master/main
+                yield exec.exec(`git clone -q https://github.com/adoptium/STF.git`); // points to master/main
                 process.chdir('../');
             }
             if (buildList == 'openjdk' && version != '') {
@@ -382,11 +420,26 @@ function getAqaTestsRepo(aqatestsRepo, version, buildList) {
         }
     });
 }
+/**
+ * Sets the system test repo and branch env vars
+ * @param  {[string]} aqasystemtestsRepo Repo containing aqa-systemtest project repo and branch
+ * @return {[null]} null
+ */
 function getAqaSystemTestsRepo(aqasystemtestsRepo) {
     const repoBranch = parseRepoBranch(aqasystemtestsRepo);
     process.env.ADOPTOPENJDK_SYSTEMTEST_REPO = repoBranch[0];
     process.env.ADOPTOPENJDK_SYSTEMTEST_BRANCH = repoBranch[1];
 }
+/**
+ * Executes ./get.sh with any additional parameters supplied
+ * @param  {string} jdksource [description]
+ * @param  {[string]} customizedSdkUrl Download Link for JDK binaries
+ * @param  {[string]} sdkdir Directory for SDK
+ * @param  {[string]} openj9Repo Alternative openJ9repo
+ * @param  {[string]} tkgRepo Alternative TKG
+ * @param  {[string]} vendorTestParams Vendor supplied test parameters
+ * @return {[null]}  null
+ */
 function runGetSh(tkgRepo, openj9Repo, vendorTestParams, jdksource, customizedSdkUrl, sdkdir) {
     return __awaiter(this, void 0, void 0, function* () {
         let parameters = '';
@@ -415,6 +468,20 @@ function runGetSh(tkgRepo, openj9Repo, vendorTestParams, jdksource, customizedSd
         }
     });
 }
+/**
+ * Sets up enviroment to generate parallelList.mk
+ * @param  {string} version JDK Version being tested
+ * @param  {string} jdksource Source for JDK
+ * @param  {[string]} customizedSdkUrl Download link for JDK binaries
+ * @param  {[string]} sdkdir Directory for SDK
+ * @param  {[string]} buildList AQAvit Test suite
+ * @param  {[string]} aqatestsRepo Alternative aqatestRepo
+ * @param  {[string]} openj9Repo Alternative openj9Repo
+ * @param  {[string]} tkgRepo Alternative TKG repo
+ * @param  {[string]} vendorTestParams Vendor provided test parameters
+ * @param  {[string]} aqasystemtestsRepo Alternative AQA-systemtestRepo
+ * @return {[null]}  null
+ */
 function setupParallelEnv(version, jdksource, customizedSdkUrl, sdkdir, buildList, aqatestsRepo, openj9Repo, tkgRepo, vendorTestParams, aqasystemtestsRepo, numMachines) {
     return __awaiter(this, void 0, void 0, function* () {
         yield setupTestEnv(version, jdksource, customizedSdkUrl, sdkdir, buildList, aqatestsRepo, openj9Repo, tkgRepo, vendorTestParams, aqasystemtestsRepo);
@@ -424,9 +491,23 @@ function setupParallelEnv(version, jdksource, customizedSdkUrl, sdkdir, buildLis
     });
 }
 exports.setupParallelEnv = setupParallelEnv;
+/**
+ * Sets up the test environment on the runner.
+ * @param  {string} version JDK Version being tested
+ * @param  {string} jdksource Source for JDK
+ * @param  {[string]} customizedSdkUrl Download link for JDK binaries
+ * @param  {[string]} sdkdir Directory for SDK
+ * @param  {[string]} buildList AQAvit Test suite
+ * @param  {[string]} aqatestsRepo Alternative aqatestRepo
+ * @param  {[string]} openj9Repo Alternative openj9Repo
+ * @param  {[string]} tkgRepo Alternative TKG repo
+ * @param  {[string]} vendorTestParams Vendor provided test parameters
+ * @param  {[string]} aqasystemtestsRepo Alternative AQA-systemtestRepo
+ * @return {null}  null
+ */
 function setupTestEnv(version, jdksource, customizedSdkUrl, sdkdir, buildList, aqatestsRepo, openj9Repo, tkgRepo, vendorTestParams, aqasystemtestsRepo) {
     return __awaiter(this, void 0, void 0, function* () {
-        yield installDependencyAndSetup();
+        yield installPlatformDependencies();
         setSpec();
         process.env.BUILD_LIST = buildList;
         if ((jdksource === 'upstream' ||
@@ -462,6 +543,11 @@ function setupTestEnv(version, jdksource, customizedSdkUrl, sdkdir, buildList, a
         }
     });
 }
+/**
+ * Splits the repo branch to obtain project name
+ * @param  {[string]} repoBranch repository branch to split upon
+ * @return {[string[]]} Array containing parsed string or error message.
+ */
 function parseRepoBranch(repoBranch) {
     const tempRepo = repoBranch.replace(/\s/g, '');
     var slashIndexCheck = tempRepo.indexOf("/");

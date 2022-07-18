@@ -8,6 +8,7 @@ import {ExecOptions} from '@actions/exec/lib/interfaces'
 
 let tempDirectory = process.env['RUNNER_TEMP'] || ''
 const IS_WINDOWS = process.platform === 'win32'
+const IS_MACOS = process.platform === 'darwin'
 
 if (!tempDirectory) {
   let baseLocation
@@ -15,7 +16,7 @@ if (!tempDirectory) {
   if (IS_WINDOWS) {
     // On windows use the USERPROFILE env variable
     baseLocation = process.env['USERPROFILE'] || 'C:\\'
-  } else if (process.platform === 'darwin') {
+  } else if (IS_MACOS) {
     baseLocation = '/Users'
   } else {
     baseLocation = '/home'
@@ -23,6 +24,20 @@ if (!tempDirectory) {
   tempDirectory = path.join(baseLocation, 'actions', 'temp')
 }
 
+/**
+ * Runs aqa tests 
+ * @param  {string} version JDK Version being tested
+ * @param  {string} jdksource Source for JDK
+ * @param  {[string]} customizedSdkUrl Download link for JDK binaries
+ * @param  {[string]} sdkdir Directory for SDK
+ * @param  {[string]} buildList AQAvit Test suite
+ * @param  {[string]} aqatestsRepo Alternative aqatestRepo
+ * @param  {[string]} openj9Repo Alternative openj9Repo
+ * @param  {[string]} tkgRepo Alternative TKG repo
+ * @param  {[string]} vendorTestParams Vendor provided test parameters
+ * @param  {[string]} aqasystemtestsRepo Alternative AQA-systemtestRepo
+ * @return {[null]}  null
+ */
 export async function runaqaTest(
   version: string,
   jdksource: string,
@@ -81,7 +96,6 @@ export async function runaqaTest(
           `${process.env.GITHUB_WORKSPACE}/aqa-tests/TKG/parallelList.mk`
         )
       }
-      // Run the test
       await exec.exec(`make ${target}`);
    } else {
       await exec.exec('make', [`${target}`], options)
@@ -99,11 +113,15 @@ export async function runaqaTest(
   }
 }
 
+/**
+ * Read job.properties and reset TEST_JDK_HOME env variable.
+ * @return {[null]}  null
+ */
 function resetJDKHomeFromProperties(): void {
-  const pfile = `${process.env.GITHUB_WORKSPACE}/aqa-tests/job.properties`
-  if (fs.existsSync(pfile)) {
+  const jobProperties = `${process.env.GITHUB_WORKSPACE}/aqa-tests/job.properties`
+  if (fs.existsSync(jobProperties)) {
     const lines = fs
-      .readFileSync(pfile, 'utf-8')
+      .readFileSync(jobProperties, 'utf-8')
       .replace(/\r\n/g, '\n')
       .split('\n')
       .filter(Boolean)
@@ -118,6 +136,12 @@ function resetJDKHomeFromProperties(): void {
   }
 }
 
+/**
+ * Sets javaHome on the runner. Raise exception if not able to be set.
+ * @param  {string} version JDK version
+ * @param  {string} jdksource [description]
+ * @return {[string]}  javaHome    Java home
+ */
 function getTestJdkHome(version: string, jdksource: string): string {
   // Try JAVA_HOME first and then fall back to GITHUB actions default location
   let javaHome = process.env[`JAVA_HOME_${version}_X64`] as string
@@ -142,8 +166,11 @@ function getTestJdkHome(version: string, jdksource: string): string {
   return javaHome
 }
 
-// This function is an alternative of extra install step in workflow or alternative install action. This could also be implemented as github action
-async function installDependencyAndSetup(): Promise<void> {
+/**
+ * This function is an alternative of extra install step in workflow or alternative install action. This could also be implemented as github action
+ * @return {[null]}  null
+ */
+async function installPlatformDependencies(): Promise<void> { 
   if (IS_WINDOWS) {
     const cygwinPath = 'C:\\cygwin64'
     try {
@@ -180,7 +207,7 @@ async function installDependencyAndSetup(): Promise<void> {
       `${tempDirectory}/ant-contrib/lib/ant-contrib.jar`,
       `${process.env.ANT_HOME}\\lib`
     )
-  } else if (process.platform === 'darwin') {
+  } else if (IS_MACOS) {
     await exec.exec('brew install ant-contrib')
     await exec.exec('sudo sysctl -w kern.sysv.shmall=655360')
     await exec.exec('sudo sysctl -w kern.sysv.shmmax=125839605760')
@@ -230,16 +257,27 @@ async function installDependencyAndSetup(): Promise<void> {
   }
 }
 
+/**
+ * set required SPEC env variable based on OS type.
+ * @return {[null]} null     [description]
+ */
 function setSpec(): void {
   if (IS_WINDOWS) {
     process.env['SPEC'] = 'win_x86-64_cmprssptrs'
-  } else if (process.platform === 'darwin') {
+  } else if (IS_MACOS) {
     process.env['SPEC'] = 'osx_x86-64_cmprssptrs'
   } else {
     process.env['SPEC'] = 'linux_x86-64_cmprssptrs'
   }
 }
 
+/**
+ * Installs aqa-test repository onto the runner.
+ * @param  {string} version JDK version
+ * @param  {[string]} buildList [description]
+ * @param  {[string]} aqatestsRepo Alternative aqatestRepo
+ * @return {[null]} null
+ */
 async function getAqaTestsRepo(aqatestsRepo: string, version: string, buildList: string): Promise<void> {
   let repoBranch = ['adoptium/aqa-tests', 'master']
   if (aqatestsRepo.length !== 0) {
@@ -249,12 +287,12 @@ async function getAqaTestsRepo(aqatestsRepo: string, version: string, buildList:
     `git clone --depth 1 -b ${repoBranch[1]} https://github.com/${repoBranch[0]}.git`
   )
   process.chdir('aqa-tests')
-  // workaround until TKG can download the artifacts required
+  // workaround until TKG can download the artifacts required for Windows
   if (IS_WINDOWS && buildList != ''){
     if (buildList == 'system'){
       process.chdir('system')
-      await exec.exec(`git clone -q https://github.com/adoptium/aqa-systemtest.git`)
-      await exec.exec(`git clone -q https://github.com/adoptium/STF.git`)
+      await exec.exec(`git clone -q https://github.com/adoptium/aqa-systemtest.git`)  // points to master/main
+      await exec.exec(`git clone -q https://github.com/adoptium/STF.git`) // points to master/main
       process.chdir('../')
     }
     if (buildList == 'openjdk' && version != ''){
@@ -265,12 +303,27 @@ async function getAqaTestsRepo(aqatestsRepo: string, version: string, buildList:
   }
 }
 
+/**
+ * Sets the system test repo and branch env vars 
+ * @param  {[string]} aqasystemtestsRepo Repo containing aqa-systemtest project repo and branch
+ * @return {[null]} null
+ */
 function getAqaSystemTestsRepo(aqasystemtestsRepo: string): void {
   const repoBranch = parseRepoBranch(aqasystemtestsRepo)
   process.env.ADOPTOPENJDK_SYSTEMTEST_REPO = repoBranch[0]
   process.env.ADOPTOPENJDK_SYSTEMTEST_BRANCH = repoBranch[1]
 }
 
+/**
+ * Executes ./get.sh with any additional parameters supplied
+ * @param  {string} jdksource [description]
+ * @param  {[string]} customizedSdkUrl Download Link for JDK binaries
+ * @param  {[string]} sdkdir Directory for SDK
+ * @param  {[string]} openj9Repo Alternative openJ9repo
+ * @param  {[string]} tkgRepo Alternative TKG
+ * @param  {[string]} vendorTestParams Vendor supplied test parameters
+ * @return {[null]}  null
+ */
 async function runGetSh(
   tkgRepo: string,
   openj9Repo: string,
@@ -304,6 +357,20 @@ async function runGetSh(
   }
 }
 
+/**
+ * Sets up enviroment to generate parallelList.mk
+ * @param  {string} version JDK Version being tested
+ * @param  {string} jdksource Source for JDK
+ * @param  {[string]} customizedSdkUrl Download link for JDK binaries
+ * @param  {[string]} sdkdir Directory for SDK
+ * @param  {[string]} buildList AQAvit Test suite
+ * @param  {[string]} aqatestsRepo Alternative aqatestRepo
+ * @param  {[string]} openj9Repo Alternative openj9Repo
+ * @param  {[string]} tkgRepo Alternative TKG repo
+ * @param  {[string]} vendorTestParams Vendor provided test parameters
+ * @param  {[string]} aqasystemtestsRepo Alternative AQA-systemtestRepo
+ * @return {[null]}  null
+ */
 export async function setupParallelEnv(
   version: string,
   jdksource: string,
@@ -325,6 +392,20 @@ export async function setupParallelEnv(
 
 }
 
+/**
+ * Sets up the test environment on the runner.
+ * @param  {string} version JDK Version being tested
+ * @param  {string} jdksource Source for JDK
+ * @param  {[string]} customizedSdkUrl Download link for JDK binaries
+ * @param  {[string]} sdkdir Directory for SDK
+ * @param  {[string]} buildList AQAvit Test suite
+ * @param  {[string]} aqatestsRepo Alternative aqatestRepo
+ * @param  {[string]} openj9Repo Alternative openj9Repo
+ * @param  {[string]} tkgRepo Alternative TKG repo
+ * @param  {[string]} vendorTestParams Vendor provided test parameters
+ * @param  {[string]} aqasystemtestsRepo Alternative AQA-systemtestRepo
+ * @return {null}  null
+ */
 async function setupTestEnv(
   version: string,
   jdksource: string,
@@ -337,7 +418,7 @@ async function setupTestEnv(
   vendorTestParams: string,
   aqasystemtestsRepo: string
   ):  Promise<void>{
-    await installDependencyAndSetup();
+    await installPlatformDependencies();
     setSpec();
     process.env.BUILD_LIST = buildList;
     if ((jdksource === 'upstream' ||
@@ -376,6 +457,11 @@ async function setupTestEnv(
     }
 }
 
+/**
+ * Splits the repo branch to obtain project name
+ * @param  {[string]} repoBranch repository branch to split upon
+ * @return {[string[]]} Array containing parsed string or error message.
+ */
 function parseRepoBranch(repoBranch: string): string[] {
   const tempRepo = repoBranch.replace(/\s/g, '')
   var slashIndexCheck = tempRepo.indexOf( "/" )

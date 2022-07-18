@@ -54,7 +54,7 @@ inputs:
       description: 'Run jobs in parallel'
       required: false
   num_machines:
-      description: 'Number of machines to run parallel'
+      description: 'Number of machines to run parallel tests'
       required: false
 runs:
   using: 'node12'
