@@ -408,8 +408,8 @@ function getAqaTestsRepo(aqatestsRepo, version, buildList) {
         if (IS_WINDOWS && buildList != '') {
             if (buildList == 'system') {
                 process.chdir('system');
-                yield exec.exec(`git clone -q https://github.com/adoptium/aqa-systemtest.git`); // points to master/main
-                yield exec.exec(`git clone -q https://github.com/adoptium/STF.git`); // points to master/main
+                yield exec.exec(`git clone -q -b v0.9.3 https://github.com/adoptium/aqa-systemtest.git`); // points to v0.9.3 for July PSU
+                yield exec.exec(`git clone -q -b v0.9.3 https://github.com/adoptium/STF.git`); // points to v0.9.3 for July PSU
                 process.chdir('../');
             }
             if (buildList == 'openjdk' && version != '') {

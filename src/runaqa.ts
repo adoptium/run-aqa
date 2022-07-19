@@ -291,8 +291,8 @@ async function getAqaTestsRepo(aqatestsRepo: string, version: string, buildList:
   if (IS_WINDOWS && buildList != ''){
     if (buildList == 'system'){
       process.chdir('system')
-      await exec.exec(`git clone -q https://github.com/adoptium/aqa-systemtest.git`)  // points to master/main
-      await exec.exec(`git clone -q https://github.com/adoptium/STF.git`) // points to master/main
+      await exec.exec(`git clone -q -b v0.9.3 https://github.com/adoptium/aqa-systemtest.git`)  // points to v0.9.3 for July PSU
+      await exec.exec(`git clone -q -b v0.9.3 https://github.com/adoptium/STF.git`) // points to v0.9.3 for July PSU
       process.chdir('../')
     }
     if (buildList == 'openjdk' && version != ''){
