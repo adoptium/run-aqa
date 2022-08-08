@@ -161,7 +161,8 @@ function getTestJdkHome(version: string, jdksource: string): string {
     javaHome = javaHome.replace(/Program Files/g, 'Progra~1')
   }
   if (javaHome === undefined) {
-    core.error('JDK could not be found')
+    // exit with error if JDK cannot be found
+    core.setFailed('JDK could not be found')
   }
   return javaHome
 }
@@ -291,13 +292,13 @@ async function getAqaTestsRepo(aqatestsRepo: string, version: string, buildList:
   if (IS_WINDOWS && buildList != ''){
     if (buildList == 'system'){
       process.chdir('system')
-      await exec.exec(`git clone -q -b v0.9.3 https://github.com/adoptium/aqa-systemtest.git`)  // points to v0.9.3 for July PSU
-      await exec.exec(`git clone -q -b v0.9.3 https://github.com/adoptium/STF.git`) // points to v0.9.3 for July PSU
+      await exec.exec(`git clone -q https://github.com/adoptium/aqa-systemtest.git`)  // points to master/main
+      await exec.exec(`git clone -q https://github.com/adoptium/STF.git`) // points to master/main
       process.chdir('../')
     }
     if (buildList == 'openjdk' && version != ''){
       process.chdir('openjdk')
-      await exec.exec(`git clone --depth 1 -q --reference-if-able ${process.env.HOME}/openjdk_cache https://github.com/adoptium/jdk${version}.git openjdk-jdk`)
+      await exec.exec(`git clone --depth 1 -q --reference-if-able ${process.env.GITHUB_WORKSPACE}/openjdk_cache https://github.com/adoptium/jdk${version}.git openjdk-jdk`)
       process.chdir('../')
     }
   }
