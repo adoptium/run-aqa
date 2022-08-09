@@ -119,7 +119,9 @@ export async function runaqaTest(
       await exec.exec('make', [`${target}`], options)
     }
   } catch (error) {
-    core.setFailed(error.message)
+    if (error instanceof Error) {
+      core.setFailed(error.message)
+    }
   }
   if (myOutput.includes('FAILED test targets') === true) {
     core.setFailed('There are failed tests')
@@ -192,7 +194,9 @@ async function installDependencyAndSetup(): Promise<void> {
         core.addPath(`C:\\cygwin64\\bin`)
       }
     } catch (error) {
-      core.warning(error.message)
+      if (error instanceof Error) {
+        core.warning(error.message)
+      }
     }
     const antContribFile = await tc.downloadTool(
       `https://sourceforge.net/projects/ant-contrib/files/ant-contrib/ant-contrib-1.0b2/ant-contrib-1.0b2-bin.zip/download`
@@ -314,11 +318,18 @@ async function runGetSh(
 
 function parseRepoBranch(repoBranch: string): string[] {
   const tempRepo = repoBranch.replace(/\s/g, '')
-  var slashIndexCheck = tempRepo.indexOf( "/" )
-  var colonIndexCheck = tempRepo.indexOf( ":" )
-  if(slashIndexCheck>0 && colonIndexCheck>0 && slashIndexCheck<colonIndexCheck) {
+  const slashIndexCheck = tempRepo.indexOf('/')
+  const colonIndexCheck = tempRepo.indexOf(':')
+  if (
+    slashIndexCheck > 0 &&
+    colonIndexCheck > 0 &&
+    slashIndexCheck < colonIndexCheck
+  ) {
     return tempRepo.split(':')
-  } else  {
-    return "Error in string parameter format. Required form: 'octocat/projectnames:branch' "
+  } else {
+    core.warning(
+      "Error in string parameter format. Required form: 'octocat/projectnames:branch' "
+    )
+    return []
   }
 }

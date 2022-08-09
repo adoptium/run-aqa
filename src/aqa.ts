@@ -88,7 +88,9 @@ async function run(): Promise<void> {
       aqasystemtestsRepo
     )
   } catch (error) {
-    core.setFailed(error.message)
+    if (error instanceof Error) {
+      core.setFailed(error.message)
+    }
   }
 }
 

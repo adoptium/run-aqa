@@ -10,7 +10,7 @@ See [action.yml](https://github.com/adoptium/run-aqa/blob/master/action.yml)
 
 ```yaml
 steps:
-- uses: actions/checkout@v1
+- uses: actions/checkout@v3
  - name: Build Openj9 JDK
    id: buildOpenj9
    uses: eclipse/build-openj9@v1
@@ -32,11 +32,11 @@ You can also:
 ### run openjdk test _jdk_math against customized JDK, jdk setup by [actions/setup-java](https://github.com/actions/setup-java)
 
 ```yaml
-- uses: actions/setup-java@v1
+- uses: actions/setup-java@v3
   with:
     java-version: '11' # The JDK version to make available on the path.
 - name: AQA
-  uses: adoptium/run-aqa@v1
+  uses: adoptium/run-aqa@v2
   with: 
     version: '11'
     jdksource: 'customized'
@@ -64,9 +64,9 @@ You can also:
 
 ```yaml
 steps:
-- uses: actions/checkout@v1
+- uses: actions/checkout@v3
 - name: AQA
-  uses: adoptium/run-aqa@v1
+  uses: adoptium/run-aqa@v2
   with: 
     version: '11'
     jdksource: 'github-hosted'
@@ -77,7 +77,7 @@ steps:
 ## Work with [upload-artifact](https://github.com/actions/upload-artifact) to upload test outputs if there are test failures
 
 ```yaml
-- uses: actions/upload-artifact@v2-preview
+- uses: actions/upload-artifact@v3
   if: failure()
   with:
     name: test_output
