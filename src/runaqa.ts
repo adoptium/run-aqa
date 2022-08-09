@@ -83,9 +83,9 @@ export async function runaqaTest(
         .toUpperCase()}_TARGET=${customTarget}`
       await exec.exec('make', [`${target}`, `${customOption}`], options)
     }
-    else if (target.includes('-f parallelList.mk')){
+    else if (target.includes('-f parallelList.mk')) {
       // move the parallelList to TKG/
-      if (IS_WINDOWS){
+      if (IS_WINDOWS) {
         await io.cp(
           `${process.env.GITHUB_WORKSPACE}\\parallelList.mk`,
           `${process.env.GITHUB_WORKSPACE}\\aqa-tests\\TKG\\parallelList.mk`
@@ -101,10 +101,10 @@ export async function runaqaTest(
       await exec.exec('make', [`${target}`], options)
     }
   } catch (error) {
-    if (error instanceof Error){
+    if (error instanceof Error) {
       core.setFailed(error.message)
     }
-    else{
+    else {
       core.setFailed('Unexpected error')
     }
   }
@@ -193,10 +193,10 @@ async function installPlatformDependencies(): Promise<void> {
         core.addPath(`C:\\cygwin64\\bin`)
       }
     } catch (error) {
-      if (error instanceof Error){
+      if (error instanceof Error) {
         core.warning(error.message)
       }
-      else{
+      else {
         core.warning('Unexpected error')
       }
     }
@@ -242,7 +242,7 @@ async function installPlatformDependencies(): Promise<void> {
         `${process.env.ANT_HOME}\\lib`
       )
     }
-    //environment
+    // environment
     if ('RUNNER_USER' in process.env) {
       process.env['LOGNAME'] = process.env['RUNNER_USER']
     } else {
@@ -252,7 +252,7 @@ async function installPlatformDependencies(): Promise<void> {
     }
 
     if (fs.existsSync('/usr/bin/apt-get')) {
-      //disable apport
+      // disable apport
       await exec.exec('sudo service apport stop')
     }
   }
@@ -289,15 +289,16 @@ async function getAqaTestsRepo(aqatestsRepo: string, version: string, buildList:
   )
   process.chdir('aqa-tests')
   // workaround until TKG can download the artifacts required for Windows
-  if (IS_WINDOWS && buildList != ''){
-    if (buildList == 'system'){
+  if (IS_WINDOWS && buildList != '') {
+    if (buildList === 'system'){
       process.chdir('system')
-      await exec.exec(`git clone -q https://github.com/adoptium/aqa-systemtest.git`)  // points to master/main
-      await exec.exec(`git clone -q https://github.com/adoptium/STF.git`) // points to master/main
+      await exec.exec(`git clone -q https://github.com/adoptium/aqa-systemtest.git`)  // points to master
+      await exec.exec(`git clone -q https://github.com/adoptium/STF.git`) // points to master
       process.chdir('../')
     }
-    if (buildList == 'openjdk' && version != ''){
+    if (buildList === 'openjdk' && version != '') {
       process.chdir('openjdk')
+      // Shallow clone the adoptium JDK version - quietly - if there is a reference repo obtain objects from there - destination is openjdk-jdk
       await exec.exec(`git clone --depth 1 -q --reference-if-able ${process.env.GITHUB_WORKSPACE}/openjdk_cache https://github.com/adoptium/jdk${version}.git openjdk-jdk`)
       process.chdir('../')
     }
@@ -394,6 +395,28 @@ export async function setupParallelEnv(
 }
 
 /**
+ * Sets required env variables.
+ * @param  {string} version JDK Version being tested
+ * @param  {string} jdksource Source for JDK
+ * @param  {[string]} sdkdir Directory for SDK
+ * @param  {[string]} buildList AQAvit Test suite
+ * @return {null}  null
+ */
+function setupEnvVariables(version: string, jdksource: string, buildList: string, sdkdir: string): void {
+  setSpec();
+  process.env.BUILD_LIST = buildList;
+  if ((jdksource === 'upstream' ||
+      jdksource === 'github-hosted' ||
+      jdksource === 'install-jdk') &&
+      !('TEST_JDK_HOME' in process.env)) {
+      process.env.TEST_JDK_HOME = getTestJdkHome(version, jdksource);
+  }
+  if (!('TEST_JDK_HOME' in process.env)) {
+      process.env.TEST_JDK_HOME = `${sdkdir}/openjdkbinary/j2sdk-image`;
+  }
+}
+
+/**
  * Sets up the test environment on the runner.
  * @param  {string} version JDK Version being tested
  * @param  {string} jdksource Source for JDK
@@ -418,25 +441,14 @@ async function setupTestEnv(
   tkgRepo: string,
   vendorTestParams: string,
   aqasystemtestsRepo: string
-  ):  Promise<void>{
+  ):  Promise<void> {
     await installPlatformDependencies();
-    setSpec();
-    process.env.BUILD_LIST = buildList;
-    if ((jdksource === 'upstream' ||
-        jdksource === 'github-hosted' ||
-        jdksource === 'install-jdk') &&
-        !('TEST_JDK_HOME' in process.env)) {
-        process.env.TEST_JDK_HOME = getTestJdkHome(version, jdksource);
-    }
-    if (!('TEST_JDK_HOME' in process.env)) {
-        process.env.TEST_JDK_HOME = `${sdkdir}/openjdkbinary/j2sdk-image`;
-    }
-
+    setupEnvVariables(version, jdksource, buildList, sdkdir);
     await getAqaTestsRepo(aqatestsRepo, version, buildList);
     await runGetSh(tkgRepo, openj9Repo, vendorTestParams, jdksource, customizedSdkUrl, sdkdir);
     resetJDKHomeFromProperties();
 
-    //Get Dependencies, using /*zip*/dependents.zip to avoid loop every available files
+    // Get Dependencies, using /*zip*/dependents.zip to avoid loop every available files
     let dependents = await tc.downloadTool('https://ci.adoptopenjdk.net/view/all/job/test.getDependency/lastSuccessfulBuild/artifact//*zip*/dependents.zip');
     let sevenzexe = '7z';
     if (fs.existsSync('/usr/bin/yum')) {

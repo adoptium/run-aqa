@@ -361,7 +361,7 @@ function installPlatformDependencies() {
                 yield tc.extractZip(`${antContribFile}`, `${tempDirectory}`);
                 yield io.cp(`${tempDirectory}/ant-contrib/lib/ant-contrib.jar`, `${process.env.ANT_HOME}\\lib`);
             }
-            //environment
+            // environment
             if ('RUNNER_USER' in process.env) {
                 process.env['LOGNAME'] = process.env['RUNNER_USER'];
             }
@@ -369,7 +369,7 @@ function installPlatformDependencies() {
                 core.warning('RUNNER_USER is not the GitHub Actions environment variables shell script. Container is configured differently. Please check the updated lists of environment variables.');
             }
             if (fs.existsSync('/usr/bin/apt-get')) {
-                //disable apport
+                // disable apport
                 yield exec.exec('sudo service apport stop');
             }
         }
@@ -407,14 +407,15 @@ function getAqaTestsRepo(aqatestsRepo, version, buildList) {
         process.chdir('aqa-tests');
         // workaround until TKG can download the artifacts required for Windows
         if (IS_WINDOWS && buildList != '') {
-            if (buildList == 'system') {
+            if (buildList === 'system') {
                 process.chdir('system');
-                yield exec.exec(`git clone -q https://github.com/adoptium/aqa-systemtest.git`); // points to master/main
-                yield exec.exec(`git clone -q https://github.com/adoptium/STF.git`); // points to master/main
+                yield exec.exec(`git clone -q https://github.com/adoptium/aqa-systemtest.git`); // points to master
+                yield exec.exec(`git clone -q https://github.com/adoptium/STF.git`); // points to master
                 process.chdir('../');
             }
-            if (buildList == 'openjdk' && version != '') {
+            if (buildList === 'openjdk' && version != '') {
                 process.chdir('openjdk');
+                // Shallow clone the adoptium JDK version - quietly - if there is a reference repo obtain objects from there - destination is openjdk-jdk
                 yield exec.exec(`git clone --depth 1 -q --reference-if-able ${process.env.GITHUB_WORKSPACE}/openjdk_cache https://github.com/adoptium/jdk${version}.git openjdk-jdk`);
                 process.chdir('../');
             }
@@ -493,6 +494,27 @@ function setupParallelEnv(version, jdksource, customizedSdkUrl, sdkdir, buildLis
 }
 exports.setupParallelEnv = setupParallelEnv;
 /**
+ * Sets required env variables.
+ * @param  {string} version JDK Version being tested
+ * @param  {string} jdksource Source for JDK
+ * @param  {[string]} sdkdir Directory for SDK
+ * @param  {[string]} buildList AQAvit Test suite
+ * @return {null}  null
+ */
+function setupEnvVariables(version, jdksource, buildList, sdkdir) {
+    setSpec();
+    process.env.BUILD_LIST = buildList;
+    if ((jdksource === 'upstream' ||
+        jdksource === 'github-hosted' ||
+        jdksource === 'install-jdk') &&
+        !('TEST_JDK_HOME' in process.env)) {
+        process.env.TEST_JDK_HOME = getTestJdkHome(version, jdksource);
+    }
+    if (!('TEST_JDK_HOME' in process.env)) {
+        process.env.TEST_JDK_HOME = `${sdkdir}/openjdkbinary/j2sdk-image`;
+    }
+}
+/**
  * Sets up the test environment on the runner.
  * @param  {string} version JDK Version being tested
  * @param  {string} jdksource Source for JDK
@@ -509,21 +531,11 @@ exports.setupParallelEnv = setupParallelEnv;
 function setupTestEnv(version, jdksource, customizedSdkUrl, sdkdir, buildList, aqatestsRepo, openj9Repo, tkgRepo, vendorTestParams, aqasystemtestsRepo) {
     return __awaiter(this, void 0, void 0, function* () {
         yield installPlatformDependencies();
-        setSpec();
-        process.env.BUILD_LIST = buildList;
-        if ((jdksource === 'upstream' ||
-            jdksource === 'github-hosted' ||
-            jdksource === 'install-jdk') &&
-            !('TEST_JDK_HOME' in process.env)) {
-            process.env.TEST_JDK_HOME = getTestJdkHome(version, jdksource);
-        }
-        if (!('TEST_JDK_HOME' in process.env)) {
-            process.env.TEST_JDK_HOME = `${sdkdir}/openjdkbinary/j2sdk-image`;
-        }
+        setupEnvVariables(version, jdksource, buildList, sdkdir);
         yield getAqaTestsRepo(aqatestsRepo, version, buildList);
         yield runGetSh(tkgRepo, openj9Repo, vendorTestParams, jdksource, customizedSdkUrl, sdkdir);
         resetJDKHomeFromProperties();
-        //Get Dependencies, using /*zip*/dependents.zip to avoid loop every available files
+        // Get Dependencies, using /*zip*/dependents.zip to avoid loop every available files
         let dependents = yield tc.downloadTool('https://ci.adoptopenjdk.net/view/all/job/test.getDependency/lastSuccessfulBuild/artifact//*zip*/dependents.zip');
         let sevenzexe = '7z';
         if (fs.existsSync('/usr/bin/yum')) {

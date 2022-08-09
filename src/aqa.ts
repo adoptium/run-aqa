@@ -74,7 +74,7 @@ async function run(): Promise<void> {
     if (sdkdir === '') {
       sdkdir = process.cwd()
     }
-    if(runParallel === 'true'){
+    if(runParallel === 'true') {
 
       await runaqa.setupParallelEnv(
         version,
@@ -90,7 +90,7 @@ async function run(): Promise<void> {
         numMachines
       )
     }
-    else{
+    else {
       await runaqa.runaqaTest(
         version,
         jdksource,
@@ -107,10 +107,10 @@ async function run(): Promise<void> {
       )
     }
   } catch (error) {
-    if (error instanceof Error){
+    if (error instanceof Error) {
       core.setFailed(error.message)
     }
-    else{
+    else {
       core.setFailed('Unexpected error')
     }
   }
