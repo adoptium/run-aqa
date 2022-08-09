@@ -79,4 +79,4 @@ jobs:
         version: '11'
         jdksource: 'install-jdk'
         build_list: 'system'
-        target: '_DaaLoadTest_daa1'
+        target: '_DaaLoadTest_daa1_5m'
