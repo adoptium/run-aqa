@@ -123,7 +123,7 @@ Specific testcase name or different test level under build_list. Default to `_jd
 ### custom_target
 Set customized testcase when any custom target is selected(e.g. jdk_custom, langtools_custom, etc) , path to the test class to execute
 
-### aqa_testRepo
+### aqa-testsRepo
 aqa-tests git repo, that holds the definitions for the AQA test suite. Parameter can be set to use developer's personal repo. 
 
 ### tkg_Repo
