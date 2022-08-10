@@ -6,13 +6,37 @@ on:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
 jobs:
-  openjdk: # make sure build/ci work properly
+  openjdk-on-non-windows: # make sure build/ci work properly
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        os: [ubuntu-latest, macos-latest]
     steps:
+    - uses: actions/checkout@v3
+    - name: AQA
+      uses: ./
+      with: 
+        version: '11'
+        jdksource: 'github-hosted'
+        build_list: 'openjdk'
+        target: '_jdk_custom'
+  openjdk-on-windows: # make sure build/ci work properly
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest]
+    steps:
+    - name: Install Git
+      run: |
+        Invoke-WebRequest 'https://github.com/git-for-windows/git/releases/download/v2.14.3.windows.1/Git-2.14.3-64-bit.exe' -OutFile 'C:\temp\git.exe'
+        Start-Process -Wait -FilePath 'C:\temp\git.exe' -ArgumentList '/SILENT /ALLOWDOWNGRADE=1** /COMPONENTS="icons,ext\reg\shellhere,assoc,assoc_sh"'
+    - name: Set PATH
+      run: echo "C:\cygwin64\bin;C:\Program Files\Git\bin;" | Out-File -FilePath "$env:GITHUB_PATH" -Encoding utf8 -Append
+    - name: Cygwin git configuration
+      shell: bash
+      run: git config --system core.autocrlf false && git config --global --add safe.directory '*'
     - uses: actions/checkout@v3
     - name: AQA
       uses: ./
@@ -59,13 +83,43 @@ jobs:
         jdksource: 'install-jdk'
         build_list: 'functional'
         target: '_floatSanityTests'
-  system: # make sure build/ci work properly
+  system-on-non-windows: # make sure build/ci work properly
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        os: [ubuntu-latest, macos-latest]
     steps:
+    - uses: actions/checkout@v3
+    - uses: AdoptOpenJDK/install-jdk@v1
+      with:
+        version: '11'
+        targets: 'JDK_11'
+        impl: 'openj9'
+        source: 'nightly'
+    - name: AQA
+      uses: ./
+      with: 
+        version: '11'
+        jdksource: 'install-jdk'
+        build_list: 'system'
+        target: '_DaaLoadTest_daa1_5m'
+  system-on-windows:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest]
+    steps:
+    - name: Install Git
+      run: |
+        Invoke-WebRequest 'https://github.com/git-for-windows/git/releases/download/v2.14.3.windows.1/Git-2.14.3-64-bit.exe' -OutFile 'C:\temp\git.exe'
+        Start-Process -Wait -FilePath 'C:\temp\git.exe' -ArgumentList '/SILENT /ALLOWDOWNGRADE=1** /COMPONENTS="icons,ext\reg\shellhere,assoc,assoc_sh"'
+    - name: Set PATH
+      run: echo "C:\cygwin64\bin;C:\Program Files\Git\bin;" | Out-File -FilePath "$env:GITHUB_PATH" -Encoding utf8 -Append
+    - name: Cygwin git configuration
+      shell: bash
+      run: git config --system core.autocrlf false && git config --global --add safe.directory '*'
     - uses: actions/checkout@v3
     - uses: AdoptOpenJDK/install-jdk@v1
       with:
