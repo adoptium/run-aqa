@@ -328,7 +328,7 @@ function parseRepoBranch(repoBranch: string): string[] {
     return tempRepo.split(':')
   } else {
     core.warning(
-      "Error in string parameter format. Required form: 'octocat/projectnames:branch' "
+      "Error in string parameter format. Required form: 'octocat/projectname:branch' "
     )
     return []
   }

@@ -106,19 +106,19 @@ steps:
 
 ### jdksource
 THe source of test against JDK. Default is `upstream`. Supported value are [`upstream`, `install-jdk`, `github-hosted`]
-  - upstream: JDK built by buildjdk action
+  - upstream: JDK built by build-jdk Github action
   - install-jdk: JDK installed by [AdoptOpenJDK/install-jdk](https://github.com/AdoptOpenJDK/install-jdk) | [actions/setup-java](https://github.com/actions/setup-java)
-  - github-hosted : pre-installed JDK on github-hosted environment
+  - github-hosted : pre-installed JDK on github-hosted runner
 
 ### version
 The Java version that tests are running against (Supported values are: 8, 9, 10, 11, 12, 13, ...)
 By default, this action will run against upstream jdk build action installed JDK. Specifying this parameter is required when jdksource is not `upstream`.
 
 ### build_list
-Test category. Default to `openjdk`. Supported value are [`openjdk`, `functional`, `system, perf`, `external`]
+Test category. Default to `openjdk`. Supported values are [`openjdk`, `functional`, `system`, `perf`, `external`]
 
 ### target
-Specific testcase name or different test level under build_list. Default to `_jdk_math`
+Specific test target name (`<testCaseName>` as defined in a playlist.xml) or different test level under build_list. Defaults to `_jdk_math` for build_list=openjdk
 
 ### custom_target
 Set customized testcase when any custom target is selected(e.g. jdk_custom, langtools_custom, etc) , path to the test class to execute
@@ -136,7 +136,7 @@ When `jdksource` is nightly or customized, set url for customized sdk
 When `jdksource` is nightly or customized, set preferred directory to store sdk
 
 ### aqa-systemtestsRepo:
-Personal aqa-systemtests Repo. For example, octocat/aqa-systemtests:test
+Personal aqa-systemtest Repo. For example, octocat/aqa-systemtest:test
 
 ### openj9_repo:
 Set to openj9 Repo
