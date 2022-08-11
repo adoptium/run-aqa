@@ -96,7 +96,7 @@ steps:
 | target | _jdk_math | |
 | custom_target |  | |
 | aqa-testsRepo |  | |
-| aqa-systemtestsRepo |  | |
+| aqa-systemtestRepo |  | |
 | openj9_repo |  | |
 | tkg_Repo |  | |
 | vendor_testRepos |  | |
@@ -105,7 +105,7 @@ steps:
 | vendor_testShas|  | |
 
 ### jdksource
-THe source of test against JDK. Default is `upstream`. Supported value are [`upstream`, `install-jdk`, `github-hosted`]
+The source of test against JDK. Default is `upstream`. Supported value are [`upstream`, `install-jdk`, `github-hosted`]
   - upstream: JDK built by build-jdk Github action
   - install-jdk: JDK installed by [AdoptOpenJDK/install-jdk](https://github.com/AdoptOpenJDK/install-jdk) | [actions/setup-java](https://github.com/actions/setup-java)
   - github-hosted : pre-installed JDK on github-hosted runner
@@ -135,7 +135,7 @@ When `jdksource` is nightly or customized, set url for customized sdk
 ### sdkdir
 When `jdksource` is nightly or customized, set preferred directory to store sdk
 
-### aqa-systemtestsRepo:
+### aqa-systemtestRepo:
 Personal aqa-systemtest Repo. For example, octocat/aqa-systemtest:test
 
 ### openj9_repo:

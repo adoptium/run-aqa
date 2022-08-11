@@ -38,7 +38,7 @@ function run() {
             const target = core.getInput('target', { required: false });
             const customTarget = core.getInput('custom_target', { required: false });
             const aqatestsRepo = core.getInput('aqa-testsRepo', { required: false });
-            const aqasystemtestsRepo = core.getInput('aqa-systemtestsRepo', {
+            const aqasystemtestsRepo = core.getInput('aqa-systemtestRepo', {
                 required: false
             });
             const openj9Repo = core.getInput('openj9_repo', { required: false });

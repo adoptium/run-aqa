@@ -18,19 +18,19 @@ inputs:
     description: 'testing jdk version (Required when jdksource is github-hosted or install-jdk.)'
     required: false
   build_list:           # test category
-    description: 
+    description: 'Test category. Default to `openjdk`. Supported values are [`openjdk`, `functional`, `system`, `perf`, `external`]'
     default: 'openjdk'
   target:              # test
-    description: 
+    description: 'Specific test target name (`<testCaseName>` as defined in a playlist.xml) or different test level under build_list.'
     default: '_jdk_math'
   custom_target:   #  Used if need to set non-default custom target
-    description:
+    description: 'Set customized testcase when any custom target is selected(e.g. jdk_custom, langtools_custom, etc) , path to the test class to execute'
     required: false
   aqa-testsRepo:
     description: 'Personal aqa-tests Repo. For example, octocat/aqa-tests:test'
     required: false
-  aqa-systemtestsRepo:
-    description: 'Personal aqa-systemtests Repo. For example, octocat/aqa-systemtests:test'
+  aqa-systemtestRepo:
+    description: 'Personal aqa-systemtest Repo. For example, octocat/aqa-systemtest:test'
     required: false
   openj9_repo:
     description: 'openj9 Repo'
