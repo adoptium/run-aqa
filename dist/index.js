@@ -67,7 +67,7 @@ function run() {
             }
             if ((jdksource === 'github-hosted' || jdksource === 'install-jdk') &&
                 version.length === 0) {
-                core.setFailed('Please provide jdkversion if jdksource is github-hosted installed or AdoptOpenJKD/install-jdk installed.');
+                core.setFailed('Please provide jdkversion if jdksource is github-hosted installed or AdoptOpenJDK/install-jdk installed.');
             }
             if (vendorTestRepos !== '') {
                 vendorTestParams = `--vendor_repos ${vendorTestRepos}`;
@@ -384,7 +384,7 @@ function parseRepoBranch(repoBranch) {
         return tempRepo.split(':');
     }
     else {
-        core.warning("Error in string parameter format. Required form: 'octocat/projectnames:branch' ");
+        core.warning("Error in string parameter format. Required form: 'octocat/projectname:branch' ");
         return [];
     }
 }

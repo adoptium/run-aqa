@@ -55,7 +55,7 @@ async function run(): Promise<void> {
       version.length === 0
     ) {
       core.setFailed(
-        'Please provide jdkversion if jdksource is github-hosted installed or AdoptOpenJKD/install-jdk installed.'
+        'Please provide jdkversion if jdksource is github-hosted installed or AdoptOpenJDK/install-jdk installed.'
       )
     }
     if (vendorTestRepos !== '') {
