@@ -379,6 +379,7 @@ export async function setupParallelEnv(
   customizedSdkUrl: string,
   sdkdir: string,
   buildList: string,
+  target: string,
   aqatestsRepo: string,
   openj9Repo: string,
   tkgRepo: string,
@@ -389,7 +390,7 @@ export async function setupParallelEnv(
 
   await setupTestEnv(version, jdksource, customizedSdkUrl, sdkdir, buildList, aqatestsRepo, openj9Repo, tkgRepo, vendorTestParams, aqasystemtestsRepo);
   process.chdir('TKG');
-  process.env.PARALLEL_OPTIONS = `PARALLEL_OPTIONS=TEST=${buildList} TEST_TIME= NUM_MACHINES=${numMachines}`;
+  process.env.PARALLEL_OPTIONS = `PARALLEL_OPTIONS=TEST=${target} TEST_TIME= NUM_MACHINES=${numMachines}`;
   await exec.exec(`make genParallelList ${process.env.PARALLEL_OPTIONS}`);
 
 }

@@ -82,6 +82,7 @@ async function run(): Promise<void> {
         customizedSdkUrl,
         sdkdir,
         buildList,
+        target,
         aqatestsRepo,
         openj9Repo,
         tkgRepo,
