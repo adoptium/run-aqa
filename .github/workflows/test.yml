@@ -6,27 +6,12 @@ on:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
 jobs:
-  openjdk-on-non-windows: # make sure build/ci work properly
+  openjdk: # make sure build/ci work properly
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest]
-    steps:
-    - uses: actions/checkout@v3
-    - name: AQA
-      uses: ./
-      with: 
-        version: '11'
-        jdksource: 'github-hosted'
-        build_list: 'openjdk'
-        target: '_jdk_custom'
-  openjdk-on-windows: # make sure build/ci work properly
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [windows-latest]
+        os: [ubuntu-latest, macos-latest, windows-latest]
     steps:
     - uses: actions/checkout@v3
     - name: AQA
@@ -74,33 +59,12 @@ jobs:
         jdksource: 'install-jdk'
         build_list: 'functional'
         target: '_floatSanityTests'
-  system-on-non-windows: # make sure build/ci work properly
+  system: # make sure build/ci work properly
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest]
-    steps:
-    - uses: actions/checkout@v3
-    - uses: AdoptOpenJDK/install-jdk@v1
-      with:
-        version: '11'
-        targets: 'JDK_11'
-        impl: 'openj9'
-        source: 'nightly'
-    - name: AQA
-      uses: ./
-      with: 
-        version: '11'
-        jdksource: 'install-jdk'
-        build_list: 'system'
-        target: '_DaaLoadTest_daa1_5m'
-  system-on-windows:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [windows-latest]
+        os: [ubuntu-latest, macos-latest, windows-latest]
     steps:
     - uses: actions/checkout@v3
     - uses: AdoptOpenJDK/install-jdk@v1
