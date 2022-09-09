@@ -74,7 +74,7 @@ async function run(): Promise<void> {
     if (sdkdir === '') {
       sdkdir = process.cwd()
     }
-    if(runParallel === 'true') {
+    if(runParallel === 'true' && numMachines != '1') {
 
       await runaqa.setupParallelEnv(
         version,

@@ -31,6 +31,8 @@ if (!tempDirectory) {
  * @param  {[string]} customizedSdkUrl Download link for JDK binaries
  * @param  {[string]} sdkdir Directory for SDK
  * @param  {[string]} buildList AQAvit Test suite
+ * @param  {[string]} target  aqa test(s) to run
+ * @param  {[string]} customTarget custom test(s) to run
  * @param  {[string]} aqatestsRepo Alternative aqatestRepo
  * @param  {[string]} openj9Repo Alternative openj9Repo
  * @param  {[string]} tkgRepo Alternative TKG repo
@@ -59,6 +61,7 @@ export async function runaqaTest(
     customizedSdkUrl,
     sdkdir,
     buildList,
+    target,
     aqatestsRepo,
     openj9Repo,
     tkgRepo,
@@ -84,18 +87,6 @@ export async function runaqaTest(
       await exec.exec('make', [`${target}`, `${customOption}`], options)
     }
     else if (target.includes('-f parallelList.mk')) {
-      // move the parallelList to TKG/
-      if (IS_WINDOWS) {
-        await io.cp(
-          `${process.env.GITHUB_WORKSPACE}\\parallelList.mk`,
-          `${process.env.GITHUB_WORKSPACE}\\aqa-tests\\TKG\\parallelList.mk`
-        )
-      } else {
-        await io.cp(
-          `${process.env.GITHUB_WORKSPACE}/parallelList.mk`,
-          `${process.env.GITHUB_WORKSPACE}/aqa-tests/TKG/parallelList.mk`
-        )
-      }
       await exec.exec(`make ${target}`);
    } else {
       await exec.exec('make', [`${target}`], options)
@@ -366,6 +357,7 @@ async function runGetSh(
  * @param  {[string]} customizedSdkUrl Download link for JDK binaries
  * @param  {[string]} sdkdir Directory for SDK
  * @param  {[string]} buildList AQAvit Test suite
+ * @param  {[string]} target  test(s) to run
  * @param  {[string]} aqatestsRepo Alternative aqatestRepo
  * @param  {[string]} openj9Repo Alternative openj9Repo
  * @param  {[string]} tkgRepo Alternative TKG repo
@@ -388,7 +380,7 @@ export async function setupParallelEnv(
   numMachines: string
 ): Promise<void> {
 
-  await setupTestEnv(version, jdksource, customizedSdkUrl, sdkdir, buildList, aqatestsRepo, openj9Repo, tkgRepo, vendorTestParams, aqasystemtestsRepo);
+  await setupTestEnv(version, jdksource, customizedSdkUrl, sdkdir, buildList, target, aqatestsRepo, openj9Repo, tkgRepo, vendorTestParams, aqasystemtestsRepo);
   process.chdir('TKG');
   process.env.PARALLEL_OPTIONS = `PARALLEL_OPTIONS=TEST=${target} TEST_TIME= NUM_MACHINES=${numMachines}`;
   await exec.exec(`make genParallelList ${process.env.PARALLEL_OPTIONS}`);
@@ -437,6 +429,7 @@ async function setupTestEnv(
   customizedSdkUrl: string,
   sdkdir: string,
   buildList: string,
+  target: string,
   aqatestsRepo: string,
   openj9Repo: string,
   tkgRepo: string,
@@ -449,6 +442,11 @@ async function setupTestEnv(
     await runGetSh(tkgRepo, openj9Repo, vendorTestParams, jdksource, customizedSdkUrl, sdkdir);
     resetJDKHomeFromProperties();
 
+    // parallelList must be in TKG
+    if (target.includes('-f parallelList.mk')) {
+      moveParallelListToTKG();
+    }
+    
     // Get Dependencies, using /*zip*/dependents.zip to avoid loop every available files
     let dependents = await tc.downloadTool('https://ci.adoptopenjdk.net/view/all/job/test.getDependency/lastSuccessfulBuild/artifact//*zip*/dependents.zip');
     let sevenzexe = '7z';
@@ -469,6 +467,24 @@ async function setupTestEnv(
         await io.mv(`${dependentPath}/archive/systemtest_prereqs`, `${process.env.GITHUB_WORKSPACE}/aqa-tests`);
         await io.rmRF(`${dependentPath}/archive`);
     }
+}
+
+/**
+ * Moves the parallelList to TKG directory
+ * @return {null}  null
+ */
+async function moveParallelListToTKG() {
+  if (IS_WINDOWS) {
+    await io.cp(
+      `${process.env.GITHUB_WORKSPACE}\\parallelList.mk`,
+      `${process.env.GITHUB_WORKSPACE}\\aqa-tests\\TKG\\parallelList.mk`
+    )
+  } else {
+    await io.cp(
+      `${process.env.GITHUB_WORKSPACE}/parallelList.mk`,
+      `${process.env.GITHUB_WORKSPACE}/aqa-tests/TKG/parallelList.mk`
+    )
+  }
 }
 
 /**

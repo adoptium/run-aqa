@@ -39,23 +39,23 @@ inputs:
     description: 'Personal TKG Repo. For example, octocat/TKG:test'
     required: false
   vendor_testRepos:
-      description: 'Comma-separated list of vendor repositories'
-      required: false
+    description: 'Comma-separated list of vendor repositories'
+    required: false
   vendor_testBranches:
-      description: 'Comma-separated list of vendor branches'
-      required: false
+    description: 'Comma-separated list of vendor branches'
+    required: false
   vendor_testDirs:
-      description: 'Comma-separated list of vendor directories'
-      required: false
+    description: 'Comma-separated list of vendor directories'
+    required: false
   vendor_testShas:
-      description: 'Comma-separated list of vendor SHAs'
-      required: false
+    description: 'Comma-separated list of vendor SHAs'
+    required: false
   run_parallel:
-      description: 'Run jobs in parallel'
-      required: false
+    description: 'Generate parallelList for GHA parallelism'
+    required: false
   num_machines:
-      description: 'Number of machines to run parallel tests'
-      required: false
+    description: 'Number of machines to run parallel tests'
+    required: false
 runs:
   using: 'node12'
   main: 'dist/index.js'
