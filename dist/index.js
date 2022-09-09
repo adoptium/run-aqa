@@ -102,7 +102,7 @@ function run() {
             if (sdkdir === '') {
                 sdkdir = process.cwd();
             }
-            if (runParallel === 'true') {
+            if (runParallel === 'true' && numMachines != '1') {
                 yield runaqa.setupParallelEnv(version, jdksource, customizedSdkUrl, sdkdir, buildList, target, aqatestsRepo, openj9Repo, tkgRepo, vendorTestParams, aqasystemtestsRepo, numMachines);
             }
             else {
@@ -193,6 +193,8 @@ if (!tempDirectory) {
  * @param  {[string]} customizedSdkUrl Download link for JDK binaries
  * @param  {[string]} sdkdir Directory for SDK
  * @param  {[string]} buildList AQAvit Test suite
+ * @param  {[string]} target  aqa test(s) to run
+ * @param  {[string]} customTarget custom test(s) to run
  * @param  {[string]} aqatestsRepo Alternative aqatestRepo
  * @param  {[string]} openj9Repo Alternative openj9Repo
  * @param  {[string]} tkgRepo Alternative TKG repo
@@ -202,7 +204,7 @@ if (!tempDirectory) {
  */
 function runaqaTest(version, jdksource, customizedSdkUrl, sdkdir, buildList, target, customTarget, aqatestsRepo, openj9Repo, tkgRepo, vendorTestParams, aqasystemtestsRepo) {
     return __awaiter(this, void 0, void 0, function* () {
-        yield setupTestEnv(version, jdksource, customizedSdkUrl, sdkdir, buildList, aqatestsRepo, openj9Repo, tkgRepo, vendorTestParams, aqasystemtestsRepo);
+        yield setupTestEnv(version, jdksource, customizedSdkUrl, sdkdir, buildList, target, aqatestsRepo, openj9Repo, tkgRepo, vendorTestParams, aqasystemtestsRepo);
         const options = {};
         let myOutput = '';
         options.listeners = {
@@ -220,13 +222,6 @@ function runaqaTest(version, jdksource, customizedSdkUrl, sdkdir, buildList, tar
                 yield exec.exec('make', [`${target}`, `${customOption}`], options);
             }
             else if (target.includes('-f parallelList.mk')) {
-                // move the parallelList to TKG/
-                if (IS_WINDOWS) {
-                    yield io.cp(`${process.env.GITHUB_WORKSPACE}\\parallelList.mk`, `${process.env.GITHUB_WORKSPACE}\\aqa-tests\\TKG\\parallelList.mk`);
-                }
-                else {
-                    yield io.cp(`${process.env.GITHUB_WORKSPACE}/parallelList.mk`, `${process.env.GITHUB_WORKSPACE}/aqa-tests/TKG/parallelList.mk`);
-                }
                 yield exec.exec(`make ${target}`);
             }
             else {
@@ -477,6 +472,7 @@ function runGetSh(tkgRepo, openj9Repo, vendorTestParams, jdksource, customizedSd
  * @param  {[string]} customizedSdkUrl Download link for JDK binaries
  * @param  {[string]} sdkdir Directory for SDK
  * @param  {[string]} buildList AQAvit Test suite
+ * @param  {[string]} target  test(s) to run
  * @param  {[string]} aqatestsRepo Alternative aqatestRepo
  * @param  {[string]} openj9Repo Alternative openj9Repo
  * @param  {[string]} tkgRepo Alternative TKG repo
@@ -486,7 +482,7 @@ function runGetSh(tkgRepo, openj9Repo, vendorTestParams, jdksource, customizedSd
  */
 function setupParallelEnv(version, jdksource, customizedSdkUrl, sdkdir, buildList, target, aqatestsRepo, openj9Repo, tkgRepo, vendorTestParams, aqasystemtestsRepo, numMachines) {
     return __awaiter(this, void 0, void 0, function* () {
-        yield setupTestEnv(version, jdksource, customizedSdkUrl, sdkdir, buildList, aqatestsRepo, openj9Repo, tkgRepo, vendorTestParams, aqasystemtestsRepo);
+        yield setupTestEnv(version, jdksource, customizedSdkUrl, sdkdir, buildList, target, aqatestsRepo, openj9Repo, tkgRepo, vendorTestParams, aqasystemtestsRepo);
         process.chdir('TKG');
         process.env.PARALLEL_OPTIONS = `PARALLEL_OPTIONS=TEST=${target} TEST_TIME= NUM_MACHINES=${numMachines}`;
         yield exec.exec(`make genParallelList ${process.env.PARALLEL_OPTIONS}`);
@@ -528,13 +524,17 @@ function setupEnvVariables(version, jdksource, buildList, sdkdir) {
  * @param  {[string]} aqasystemtestsRepo Alternative AQA-systemtestRepo
  * @return {null}  null
  */
-function setupTestEnv(version, jdksource, customizedSdkUrl, sdkdir, buildList, aqatestsRepo, openj9Repo, tkgRepo, vendorTestParams, aqasystemtestsRepo) {
+function setupTestEnv(version, jdksource, customizedSdkUrl, sdkdir, buildList, target, aqatestsRepo, openj9Repo, tkgRepo, vendorTestParams, aqasystemtestsRepo) {
     return __awaiter(this, void 0, void 0, function* () {
         yield installPlatformDependencies();
         setupEnvVariables(version, jdksource, buildList, sdkdir);
         yield getAqaTestsRepo(aqatestsRepo, version, buildList);
         yield runGetSh(tkgRepo, openj9Repo, vendorTestParams, jdksource, customizedSdkUrl, sdkdir);
         resetJDKHomeFromProperties();
+        // parallelList must be in TKG
+        if (target.includes('-f parallelList.mk')) {
+            moveParallelListToTKG();
+        }
         // Get Dependencies, using /*zip*/dependents.zip to avoid loop every available files
         let dependents = yield tc.downloadTool('https://ci.adoptopenjdk.net/view/all/job/test.getDependency/lastSuccessfulBuild/artifact//*zip*/dependents.zip');
         let sevenzexe = '7z';
@@ -553,6 +553,20 @@ function setupTestEnv(version, jdksource, customizedSdkUrl, sdkdir, buildList, a
             const dependentPath = yield tc.extractZip(dependents, `${process.env.GITHUB_WORKSPACE}/`);
             yield io.mv(`${dependentPath}/archive/systemtest_prereqs`, `${process.env.GITHUB_WORKSPACE}/aqa-tests`);
             yield io.rmRF(`${dependentPath}/archive`);
+        }
+    });
+}
+/**
+ * Moves the parallelList to TKG directory
+ * @return {null}  null
+ */
+function moveParallelListToTKG() {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (IS_WINDOWS) {
+            yield io.cp(`${process.env.GITHUB_WORKSPACE}\\parallelList.mk`, `${process.env.GITHUB_WORKSPACE}\\aqa-tests\\TKG\\parallelList.mk`);
+        }
+        else {
+            yield io.cp(`${process.env.GITHUB_WORKSPACE}/parallelList.mk`, `${process.env.GITHUB_WORKSPACE}/aqa-tests/TKG/parallelList.mk`);
         }
     });
 }
