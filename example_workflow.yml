@@ -1,0 +1,111 @@
+name: Run AQAvit
+
+on:
+  workflow_dispatch: # Allows the job to be manually triggered
+    inputs:
+      customizedSdkUrl:
+         description: JDK binary download link
+         required: true
+      runParallel:
+        description: Run tests in parallel
+        required: true
+        type: boolean
+      runner:
+        description: runner
+        required: true
+        type: choice
+        options:
+          - ubuntu-latest
+          - windows-2019
+          - macos-11
+
+env:
+  USE_TESTENV_PROPERTIES: true # true for AQAvit verification
+
+jobs:
+  setup-parallel:
+    runs-on: ${{ inputs.runner }}
+    if: ${{ inputs.runParallel == true }}
+    name: setup-parallel - ${{ inputs.runner }}_${{ matrix.suite }}
+    strategy:
+      fail-fast: true
+      matrix:
+        suite: [functional, openjdk, system, perf]
+    steps:
+      - uses: adoptium/run-aqa@v2.0.1
+        name: Generate parallelList - ${{ matrix.suite }}
+        with:
+          jdksource: 'customized'
+          customizedSdkUrl: ${{ inputs.customizedSdkUrl }}
+          aqa-testsRepo: 'adoptium/aqa-tests:v0.9.4-release' # Make sure this branch is set to the latest release branch
+          build_list: ${{ matrix.suite }}
+          target: ${{ matrix.suite }} # parallelList to generate
+          run_parallel: ${{ inputs.runParallel }}
+          num_machines: 4 # number of machines we want to run
+
+      - name: Archive parallelList - ${{ matrix.suite }}
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ matrix.suite }}-parallelList.mk
+          path: ${{ github.workspace }}/aqa-tests/TKG/parallelList.mk
+
+  run-aqa-parallel:
+    runs-on: ${{ inputs.runner }}
+    if: ${{ inputs.runParallel == true }}
+    needs: setup-parallel
+    name: Run AQAvit ${{ inputs.runner }} - _${{ matrix.suite }}.${{ matrix.test_list }}
+    strategy:
+      fail-fast: false
+      matrix:
+        test_list: ['testList_0', 'testList_1', 'testList_2', 'testList_3'] # numlist is hardcoded
+        suite: [functional, openjdk, system, perf]
+    steps:
+        # download the paralleList to the current working directory
+      - name: Download parallelList - ${{ matrix.suite }}
+        uses: actions/download-artifact@v2
+        with:
+          name: ${{ matrix.suite }}-parallelList.mk
+          path: ./
+
+      - name: Run AQA Parallel Test - ${{ matrix.suite }}_${{ matrix.test_list }}
+        uses: adoptium/run-aqa@v2.0.1
+        with:
+          jdksource: 'customized'
+          customizedSdkUrl: ${{ inputs.customizedSdkUrl }}
+          aqa-testsRepo: 'adoptium/aqa-tests:v0.9.4-release' # Make sure this branch is set to the latest release branch
+          build_list: ${{ matrix.suite }}
+          target : -f parallelList.mk ${{ matrix.test_list }}
+
+      - uses: actions/upload-artifact@v2
+        if: always() # Always run this step (even if the tests failed)
+        with:
+          name: test_output_${{ matrix.suite }}_${{ matrix.test_list }}
+          path: ./**/output_*/*.tap
+
+  run_aqa:
+    runs-on: ${{ inputs.runner }}
+    if: ${{ inputs.runParallel != true }} # when we do not want to run parallel tests
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [sanity, extended]
+        suite: [functional, openjdk, system, perf]
+        include:
+          - target: special
+            suite: functional
+
+    steps:
+    - name: Run AQA Tests - ${{ matrix.target }}.${{ matrix.suite }}
+      uses: adoptium/run-aqa@v2.0.1
+      with:
+        jdksource: 'customized'
+        customizedSdkUrl: ${{ inputs.customizedSdkUrl }}
+        aqa-testsRepo: 'adoptium/aqa-tests:v0.9.4-release' # Make sure this branch is set to the latest release branch
+        build_list: ${{ matrix.suite }}
+        target: _${{ matrix.target }}.${{ matrix.suite }}
+
+    - uses: actions/upload-artifact@v2
+      if: always() # Always run this step (even if the tests failed)
+      with:
+        name: test_output
+        path: ./**/output_*/*.tap

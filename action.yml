@@ -50,6 +50,12 @@ inputs:
   vendor_testShas:
       description: 'Comma-separated list of vendor SHAs'
       required: false
+  run_parallel:
+    description: 'Generate parallelList for GHA parallelism'
+    required: false
+  num_machines:
+    description: 'Number of machines to run parallel tests'
+    required: false
 runs:
   using: 'node12'
   main: 'dist/index.js'
