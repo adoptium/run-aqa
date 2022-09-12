@@ -1,4 +1,4 @@
-name: Run AQAvit 
+name: Run AQAvit
 
 on:
   workflow_dispatch: # Allows the job to be manually triggered
@@ -20,8 +20,8 @@ on:
           - macos-11
 
 env:
-  USE_TESTENV_PROPERTIES: true # true for AQAvit verification 
-  
+  USE_TESTENV_PROPERTIES: true # true for AQAvit verification
+
 jobs:
   setup-parallel:
     runs-on: ${{ inputs.runner }}
@@ -38,11 +38,11 @@ jobs:
           jdksource: 'customized'
           customizedSdkUrl: ${{ inputs.customizedSdkUrl }}
           aqa-testsRepo: 'adoptium/aqa-tests:v0.9.4-release' # Make sure this branch is set to the latest release branch
-          build_list: ${{ matrix.suite }} 
+          build_list: ${{ matrix.suite }}
           target: ${{ matrix.suite }} # parallelList to generate
           run_parallel: ${{ inputs.runParallel }}
           num_machines: 4 # number of machines we want to run
-          
+
       - name: Archive parallelList - ${{ matrix.suite }}
         uses: actions/upload-artifact@v2
         with:
@@ -56,14 +56,14 @@ jobs:
     name: Run AQAvit ${{ inputs.runner }} - _${{ matrix.suite }}.${{ matrix.test_list }}
     strategy:
       fail-fast: false
-      matrix: 
+      matrix:
         test_list: ['testList_0', 'testList_1', 'testList_2', 'testList_3'] # numlist is hardcoded
         suite: [functional, openjdk, system, perf]
     steps:
         # download the paralleList to the current working directory
       - name: Download parallelList - ${{ matrix.suite }}
         uses: actions/download-artifact@v2
-        with: 
+        with:
           name: ${{ matrix.suite }}-parallelList.mk
           path: ./
 
@@ -97,9 +97,9 @@ jobs:
     steps:
     - name: Run AQA Tests - ${{ matrix.target }}.${{ matrix.suite }}
       uses: adoptium/run-aqa@v2.0.1
-      with: 
+      with:
         jdksource: 'customized'
-        customizedSdkUrl: ${{ inputs.customizedSdkUrl }} 
+        customizedSdkUrl: ${{ inputs.customizedSdkUrl }}
         aqa-testsRepo: 'adoptium/aqa-tests:v0.9.4-release' # Make sure this branch is set to the latest release branch
         build_list: ${{ matrix.suite }}
         target: _${{ matrix.target }}.${{ matrix.suite }}

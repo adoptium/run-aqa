@@ -25,7 +25,7 @@ if (!tempDirectory) {
 }
 
 /**
- * Runs aqa tests 
+ * Runs aqa tests
  * @param  {string} version JDK Version being tested
  * @param  {string} jdksource Source for JDK
  * @param  {[string]} customizedSdkUrl Download link for JDK binaries
@@ -162,7 +162,7 @@ function getTestJdkHome(version: string, jdksource: string): string {
  * This function is an alternative of extra install step in workflow or alternative install action. This could also be implemented as github action
  * @return {[null]}  null
  */
-async function installPlatformDependencies(): Promise<void> { 
+async function installPlatformDependencies(): Promise<void> {
   if (IS_WINDOWS) {
     const cygwinPath = 'C:\\cygwin64'
     try {
@@ -191,7 +191,7 @@ async function installPlatformDependencies(): Promise<void> {
         core.warning('Unexpected error')
       }
     }
-    const antContribFile = await tc.downloadTool( 
+    const antContribFile = await tc.downloadTool(
       `https://sourceforge.net/projects/ant-contrib/files/ant-contrib/ant-contrib-1.0b2/ant-contrib-1.0b2-bin.zip/download`
     )
     await tc.extractZip(`${antContribFile}`, `${tempDirectory}`)
@@ -297,7 +297,7 @@ async function getAqaTestsRepo(aqatestsRepo: string, version: string, buildList:
 }
 
 /**
- * Sets the system test repo and branch env vars 
+ * Sets the system test repo and branch env vars
  * @param  {[string]} aqasystemtestsRepo Repo containing aqa-systemtest project repo and branch
  * @return {[null]} null
  */
@@ -446,7 +446,7 @@ async function setupTestEnv(
     if (target.includes('-f parallelList.mk')) {
       moveParallelListToTKG();
     }
-    
+
     // Get Dependencies, using /*zip*/dependents.zip to avoid loop every available files
     let dependents = await tc.downloadTool('https://ci.adoptopenjdk.net/view/all/job/test.getDependency/lastSuccessfulBuild/artifact//*zip*/dependents.zip');
     let sevenzexe = '7z';
