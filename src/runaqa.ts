@@ -494,11 +494,18 @@ async function moveParallelListToTKG() {
  */
 function parseRepoBranch(repoBranch: string): string[] {
   const tempRepo = repoBranch.replace(/\s/g, '')
-  var slashIndexCheck = tempRepo.indexOf( "/" )
-  var colonIndexCheck = tempRepo.indexOf( ":" )
-  if(slashIndexCheck>0 && colonIndexCheck>0 && slashIndexCheck<colonIndexCheck) {
+  const slashIndexCheck = tempRepo.indexOf('/')
+  const colonIndexCheck = tempRepo.indexOf(':')
+  if (
+    slashIndexCheck > 0 &&
+    colonIndexCheck > 0 &&
+    slashIndexCheck < colonIndexCheck
+  ) {
     return tempRepo.split(':')
-  } else  {
-    return ["Error in string parameter format. Required form: 'octocat/projectnames:branch' "]
+  } else {
+    core.warning(
+      "Error in string parameter format. Required form: 'octocat/projectname:branch' "
+    )
+    return []
   }
 }
