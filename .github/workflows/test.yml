@@ -11,9 +11,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-2016]
+        os: [ubuntu-latest, macos-latest, windows-latest]
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v3
     - name: AQA
       uses: ./
       with: 
@@ -30,7 +30,7 @@ jobs:
       matrix:
         image: [adoptopenjdk/centos7_build_image, adoptopenjdk/alpine3_build_image]
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v3
     - name: AQA
       uses: ./
       with: 
@@ -43,9 +43,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-2016]
+        os: [ubuntu-latest, macos-latest, windows-latest]
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v3
     - uses: AdoptOpenJDK/install-jdk@v1
       with:
         version: '11'
@@ -64,9 +64,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-2016]
+        os: [ubuntu-latest, macos-latest, windows-latest]
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v3
     - uses: AdoptOpenJDK/install-jdk@v1
       with:
         version: '11'
@@ -79,4 +79,4 @@ jobs:
         version: '11'
         jdksource: 'install-jdk'
         build_list: 'system'
-        target: '_DaaLoadTest_daa1'
+        target: '_DaaLoadTest_daa1_5m'

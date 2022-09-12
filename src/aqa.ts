@@ -13,7 +13,7 @@ async function run(): Promise<void> {
     const target = core.getInput('target', {required: false})
     const customTarget = core.getInput('custom_target', {required: false})
     const aqatestsRepo = core.getInput('aqa-testsRepo', {required: false})
-    const aqasystemtestsRepo = core.getInput('aqa-systemtestsRepo', {
+    const aqasystemtestsRepo = core.getInput('aqa-systemtestRepo', {
       required: false
     })
     const openj9Repo = core.getInput('openj9_repo', {required: false})
@@ -55,7 +55,7 @@ async function run(): Promise<void> {
       version.length === 0
     ) {
       core.setFailed(
-        'Please provide jdkversion if jdksource is github-hosted installed or AdoptOpenJKD/install-jdk installed.'
+        'Please provide jdkversion if jdksource is github-hosted installed or AdoptOpenJDK/install-jdk installed.'
       )
     }
     if (vendorTestRepos !== '') {
@@ -88,7 +88,9 @@ async function run(): Promise<void> {
       aqasystemtestsRepo
     )
   } catch (error) {
-    core.setFailed(error.message)
+    if (error instanceof Error) {
+      core.setFailed(error.message)
+    }
   }
 }
 
