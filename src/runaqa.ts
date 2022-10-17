@@ -174,7 +174,7 @@ async function installPlatformDependencies(): Promise<void> {
           'https://cygwin.com/setup-x86_64.exe',
           'C:\\temp\\cygwin.exe'
         )
-        await exec.exec(`C:\\temp\\cygwin.exe  --packages wget,bsdtar,rsync,gnupg,git,autoconf,make,gcc-core,mingw64-x86_64-gcc-core,unzip,zip,cpio,curl,grep,perl --quiet-mode --download --local-install
+        await exec.exec(`C:\\temp\\cygwin.exe  --packages bash,wget,bsdtar,rsync,gnupg,git,autoconf,make,gcc-core,mingw64-x86_64-gcc-core,unzip,zip,cpio,curl,grep,perl --quiet-mode --download --local-install
         --delete-orphans --site  https://mirrors.kernel.org/sourceware/cygwin/
         --local-package-dir "C:\\cygwin_packages"
         --root "C:\\cygwin64"`)
@@ -280,20 +280,6 @@ async function getAqaTestsRepo(aqatestsRepo: string, version: string, buildList:
   )
   process.chdir('aqa-tests')
   // workaround until TKG can download the artifacts required for Windows
-  if (IS_WINDOWS && buildList != '') {
-    if (buildList === 'system'){
-      process.chdir('system')
-      await exec.exec(`git clone -q https://github.com/adoptium/aqa-systemtest.git`)  // points to master
-      await exec.exec(`git clone -q https://github.com/adoptium/STF.git`) // points to master
-      process.chdir('../')
-    }
-    if (buildList === 'openjdk' && version != '') {
-      process.chdir('openjdk')
-      // Shallow clone the adoptium JDK version - quietly - if there is a reference repo obtain objects from there - destination is openjdk-jdk
-      await exec.exec(`git clone --depth 1 -q --reference-if-able ${process.env.GITHUB_WORKSPACE}/openjdk_cache https://github.com/adoptium/jdk${version}.git openjdk-jdk`)
-      process.chdir('../')
-    }
-  }
 }
 
 /**
