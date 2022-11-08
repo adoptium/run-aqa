@@ -1,7 +1,7 @@
-name: "nightly sanity test"
+name: "weekly sanity test"
 on:
   schedule:
-    - cron:  '30 20 * * 1-5'
+    - cron:  '30 20 * * 1'
 
 jobs:
   sanity:
@@ -11,16 +11,14 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
         version: [8, 11, 17]
-        impl: [hotspot]
+        impl: [temurin]
         buildlist: [openjdk, system, functional]
     steps:
     - uses: actions/checkout@v3
-    - uses: AdoptOpenJDK/install-jdk@v1
+    - uses: actions/setup-java@v3
       with:
-        version: ${{ matrix.version }}
-        targets: JDK_${{ matrix.version }}
-        impl: ${{ matrix.impl }}
-        source: 'nightly'
+        java-version: ${{ matrix.version }}
+        distribution: ${{ matrix.impl }}
     - name: AQA
       uses: ./
       with: 
