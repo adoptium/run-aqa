@@ -50,6 +50,7 @@ export async function runaqaTest(
   customTarget: string,
   aqatestsRepo: string,
   openj9Repo: string,
+  openj9systemtestsRepo: string,
   tkgRepo: string,
   vendorTestParams: string,
   aqasystemtestsRepo: string
@@ -64,6 +65,7 @@ export async function runaqaTest(
     target,
     aqatestsRepo,
     openj9Repo,
+    openj9systemtestsRepo,
     tkgRepo,
     vendorTestParams,
     aqasystemtestsRepo
@@ -306,6 +308,12 @@ function getAqaSystemTestsRepo(aqasystemtestsRepo: string): void {
   process.env.ADOPTOPENJDK_SYSTEMTEST_REPO = repoBranch[0]
   process.env.ADOPTOPENJDK_SYSTEMTEST_BRANCH = repoBranch[1]
 }
+function getOpenj9SystemTestsRepo(openj9systemtestsRepo: string): void {
+  const repoBranch = parseRepoBranch(openj9systemtestsRepo);
+  process.env.ADOPTOPENJDK_SYSTEMTEST_REPO = repoBranch[0];
+  process.env.ADOPTOPENJDK_SYSTEMTEST_BRANCH = repoBranch[1];
+}
+
 
 /**
  * Executes ./get.sh with any additional parameters supplied
@@ -377,10 +385,11 @@ export async function setupParallelEnv(
   tkgRepo: string,
   vendorTestParams: string,
   aqasystemtestsRepo: string,
+  openj9systemtestsRepo: string,
   numMachines: string
 ): Promise<void> {
 
-  await setupTestEnv(version, jdksource, customizedSdkUrl, sdkdir, buildList, target, aqatestsRepo, openj9Repo, tkgRepo, vendorTestParams, aqasystemtestsRepo);
+  await setupTestEnv(version, jdksource, customizedSdkUrl, sdkdir, buildList, target, aqatestsRepo, openj9Repo, openj9systemtestsRepo, tkgRepo, vendorTestParams, aqasystemtestsRepo);
   process.chdir('TKG');
   process.env.PARALLEL_OPTIONS = `PARALLEL_OPTIONS=TEST=${target} TEST_TIME= NUM_MACHINES=${numMachines}`;
   await exec.exec(`make genParallelList ${process.env.PARALLEL_OPTIONS}`);
@@ -432,6 +441,7 @@ async function setupTestEnv(
   target: string,
   aqatestsRepo: string,
   openj9Repo: string,
+  openj9systemtestsRepo: string,
   tkgRepo: string,
   vendorTestParams: string,
   aqasystemtestsRepo: string
@@ -459,6 +469,9 @@ async function setupTestEnv(
     if (buildList.includes('system')) {
         if (aqasystemtestsRepo && aqasystemtestsRepo.length !== 0) {
             getAqaSystemTestsRepo(aqasystemtestsRepo);
+        }
+        if (openj9systemtestsRepo && openj9systemtestsRepo.length !== 0) {
+          getOpenj9SystemTestsRepo(openj9systemtestsRepo);
         }
         dependents = await tc.downloadTool('https://ci.adoptopenjdk.net/view/all/job/systemtest.getDependency/lastSuccessfulBuild/artifact/*zip*/dependents.zip');
         // System.dependency has different levels of archive structures archive/systemtest_prereqs/*.*
