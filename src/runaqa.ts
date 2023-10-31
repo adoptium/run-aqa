@@ -405,7 +405,7 @@ function setupEnvVariables(version: string, jdksource: string, buildList: string
       process.env.TEST_JDK_HOME = getTestJdkHome(version, jdksource);
   }
   if (!('TEST_JDK_HOME' in process.env)) {
-      process.env.TEST_JDK_HOME = `${sdkdir}/openjdkbinary/j2sdk-image`;
+      process.env.TEST_JDK_HOME = `${sdkdir}/jdkbinary/j2sdk-image`;
   }
 }
 
