@@ -44,7 +44,7 @@ jobs:
           num_machines: 4 # number of machines we want to run
 
       - name: Archive parallelList - ${{ matrix.suite }}
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.suite }}-parallelList.mk
           path: ${{ github.workspace }}/aqa-tests/TKG/parallelList.mk
@@ -62,7 +62,7 @@ jobs:
     steps:
         # download the paralleList to the current working directory
       - name: Download parallelList - ${{ matrix.suite }}
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4
         with:
           name: ${{ matrix.suite }}-parallelList.mk
           path: ./
@@ -76,7 +76,7 @@ jobs:
           build_list: ${{ matrix.suite }}
           target : -f parallelList.mk ${{ matrix.test_list }}
 
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         if: always() # Always run this step (even if the tests failed)
         with:
           name: test_output_${{ matrix.suite }}_${{ matrix.test_list }}
@@ -104,7 +104,7 @@ jobs:
         build_list: ${{ matrix.suite }}
         target: _${{ matrix.target }}.${{ matrix.suite }}
 
-    - uses: actions/upload-artifact@v2
+    - uses: actions/upload-artifact@v4
       if: always() # Always run this step (even if the tests failed)
       with:
         name: test_output
