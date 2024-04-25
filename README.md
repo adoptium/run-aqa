@@ -77,7 +77,7 @@ steps:
 ## Work with [upload-artifact](https://github.com/actions/upload-artifact) to upload test outputs if there are test failures
 
 ```yaml
-- uses: actions/upload-artifact@v3
+- uses: actions/upload-artifact@v4
   if: failure()
   with:
     name: test_output
