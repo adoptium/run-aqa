@@ -243,8 +243,12 @@ async function installPlatformDependencies(): Promise<void> {
     }
 
     if (fs.existsSync('/usr/bin/apt-get')) {
-      // disable apport
-      await exec.exec('sudo service apport stop')
+      // Force stop apport.service
+      try {
+        const exitCode = await exec.exec('sudo', ['systemctl', 'stop', 'apport.service', '--quiet'])
+      } catch (err) {
+        console.error("Error stopping service", err)
+      }
     }
   }
 }
