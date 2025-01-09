@@ -13,6 +13,10 @@ jobs:
         version: [8, 11, 17]
         impl: [temurin]
         buildlist: [openjdk, system, functional]
+        # Exclude jdk8 for macos
+        exclude:
+          - os: macos-latest
+          - version: 8
     steps:
     - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
     - uses: actions/setup-java@8df1039502a15bceb9433410b1a100fbe190c53b # v4.5.0
