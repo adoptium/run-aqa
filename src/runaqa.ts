@@ -38,6 +38,7 @@ if (!tempDirectory) {
  * @param  {[string]} tkgRepo Alternative TKG repo
  * @param  {[string]} vendorTestParams Vendor provided test parameters
  * @param  {[string]} aqasystemtestsRepo Alternative AQA-systemtestRepo
+ * @param  {[boolean]} evnReady if environment need to update
  * @return {[null]}  null
  */
 export async function runaqaTest(
@@ -52,7 +53,8 @@ export async function runaqaTest(
   openj9Repo: string,
   tkgRepo: string,
   vendorTestParams: string,
-  aqasystemtestsRepo: string
+  aqasystemtestsRepo: string,
+  isTestContainer: string
 ): Promise<void> {
 
   await setupTestEnv(
@@ -66,7 +68,8 @@ export async function runaqaTest(
     openj9Repo,
     tkgRepo,
     vendorTestParams,
-    aqasystemtestsRepo
+    aqasystemtestsRepo,
+    isTestContainer
     );
 
   const options: ExecOptions = {}
@@ -365,6 +368,7 @@ async function runGetSh(
  * @param  {[string]} tkgRepo Alternative TKG repo
  * @param  {[string]} vendorTestParams Vendor provided test parameters
  * @param  {[string]} aqasystemtestsRepo Alternative AQA-systemtestRepo
+ * @param  {[boolean]} evnReady if environment need to update
  * @return {[null]}  null
  */
 export async function setupParallelEnv(
@@ -379,10 +383,11 @@ export async function setupParallelEnv(
   tkgRepo: string,
   vendorTestParams: string,
   aqasystemtestsRepo: string,
-  numMachines: string
+  numMachines: string,
+  isTestContainer: string
 ): Promise<void> {
 
-  await setupTestEnv(version, jdksource, customizedSdkUrl, sdkdir, buildList, target, aqatestsRepo, openj9Repo, tkgRepo, vendorTestParams, aqasystemtestsRepo);
+  await setupTestEnv(version, jdksource, customizedSdkUrl, sdkdir, buildList, target, aqatestsRepo, openj9Repo, tkgRepo, vendorTestParams, aqasystemtestsRepo, isTestContainer);
   process.chdir('TKG');
   process.env.PARALLEL_OPTIONS = `PARALLEL_OPTIONS=TEST=${target} TEST_TIME= NUM_MACHINES=${numMachines}`;
   await exec.exec(`make genParallelList ${process.env.PARALLEL_OPTIONS}`);
@@ -436,9 +441,12 @@ async function setupTestEnv(
   openj9Repo: string,
   tkgRepo: string,
   vendorTestParams: string,
-  aqasystemtestsRepo: string
+  aqasystemtestsRepo: string,
+  isTestContainer: string
   ):  Promise<void> {
-    await installPlatformDependencies();
+    if (isTestContainer == "false") {
+      await installPlatformDependencies();
+    }   
     setupEnvVariables(version, jdksource, buildList, sdkdir);
     await getAqaTestsRepo(aqatestsRepo, version, buildList);
     await runGetSh(tkgRepo, openj9Repo, vendorTestParams, jdksource, customizedSdkUrl, sdkdir);
@@ -451,8 +459,6 @@ async function setupTestEnv(
 
     // Get Dependencies, using /*zip*/dependents.zip to avoid loop every available files
     let dependents = await tc.downloadTool('https://ci.adoptopenjdk.net/view/all/job/test.getDependency/lastSuccessfulBuild/artifact//*zip*/dependents.zip');
-
-    // Test.dependency only has one level of archive directory, none of actions toolkit support mv files by regex. Using 7zip discards the directory directly
     await exec.exec(`unzip -j ${dependents} -d ${process.env.GITHUB_WORKSPACE}/aqa-tests/TKG/lib`);
     if (buildList.includes('system')) {
         if (aqasystemtestsRepo && aqasystemtestsRepo.length !== 0) {
