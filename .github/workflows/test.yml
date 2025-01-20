@@ -44,4 +44,4 @@ jobs:
             jdksource: 'install-jdk'
             build_list: 'openjdk'
             target: '_jdk_custom'
-            envReady: 'true'
+            prebuildContainer: 'true'
