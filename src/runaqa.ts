@@ -211,7 +211,6 @@ async function installPlatformDependencies(): Promise<void> {
     } else if (fs.existsSync('/usr/bin/yum')) {
       // RPM Based
       await exec.exec('sudo yum update -y')
-      await exec.exec('sudo yum install p7zip -y')
       const antContribFile = await tc.downloadTool(
         `https://sourceforge.net/projects/ant-contrib/files/ant-contrib/ant-contrib-1.0b2/ant-contrib-1.0b2-bin.zip/download`
       )
@@ -223,7 +222,6 @@ async function installPlatformDependencies(): Promise<void> {
     } else if (fs.existsSync('/sbin/apk')) {
       // Alpine Based
       await exec.exec('apk update')
-      await exec.exec('apk add p7zip')
       const antContribFile = await tc.downloadTool(
         `https://sourceforge.net/projects/ant-contrib/files/ant-contrib/ant-contrib-1.0b2/ant-contrib-1.0b2-bin.zip/download`
       )
@@ -453,13 +451,9 @@ async function setupTestEnv(
 
     // Get Dependencies, using /*zip*/dependents.zip to avoid loop every available files
     let dependents = await tc.downloadTool('https://ci.adoptopenjdk.net/view/all/job/test.getDependency/lastSuccessfulBuild/artifact//*zip*/dependents.zip');
-    let sevenzexe = '7z';
-    if (fs.existsSync('/usr/bin/yum')) {
-        sevenzexe = '7za';
-    }
 
     // Test.dependency only has one level of archive directory, none of actions toolkit support mv files by regex. Using 7zip discards the directory directly
-    await exec.exec(`${sevenzexe} e -y ${dependents} -o${process.env.GITHUB_WORKSPACE}/aqa-tests/TKG/lib`);
+    await exec.exec(`unzip -j ${dependents} -d ${process.env.GITHUB_WORKSPACE}/aqa-tests/TKG/lib`);
     if (buildList.includes('system')) {
         if (aqasystemtestsRepo && aqasystemtestsRepo.length !== 0) {
             getAqaSystemTestsRepo(aqasystemtestsRepo);
