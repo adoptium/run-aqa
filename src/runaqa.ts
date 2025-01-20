@@ -38,7 +38,7 @@ if (!tempDirectory) {
  * @param  {[string]} tkgRepo Alternative TKG repo
  * @param  {[string]} vendorTestParams Vendor provided test parameters
  * @param  {[string]} aqasystemtestsRepo Alternative AQA-systemtestRepo
- * @param  {[boolean]} evnReady if environment need to update
+ * @param  {[string]} prebuildContainer if environment need to update
  * @return {[null]}  null
  */
 export async function runaqaTest(
@@ -54,7 +54,7 @@ export async function runaqaTest(
   tkgRepo: string,
   vendorTestParams: string,
   aqasystemtestsRepo: string,
-  isTestContainer: string
+  prebuildContainer: string
 ): Promise<void> {
 
   await setupTestEnv(
@@ -69,7 +69,7 @@ export async function runaqaTest(
     tkgRepo,
     vendorTestParams,
     aqasystemtestsRepo,
-    isTestContainer
+    prebuildContainer
     );
 
   const options: ExecOptions = {}
@@ -368,7 +368,7 @@ async function runGetSh(
  * @param  {[string]} tkgRepo Alternative TKG repo
  * @param  {[string]} vendorTestParams Vendor provided test parameters
  * @param  {[string]} aqasystemtestsRepo Alternative AQA-systemtestRepo
- * @param  {[boolean]} evnReady if environment need to update
+ * @param  {[string]} prebuildContainer if environment need to update
  * @return {[null]}  null
  */
 export async function setupParallelEnv(
@@ -384,10 +384,10 @@ export async function setupParallelEnv(
   vendorTestParams: string,
   aqasystemtestsRepo: string,
   numMachines: string,
-  isTestContainer: string
+  prebuildContainer: string
 ): Promise<void> {
 
-  await setupTestEnv(version, jdksource, customizedSdkUrl, sdkdir, buildList, target, aqatestsRepo, openj9Repo, tkgRepo, vendorTestParams, aqasystemtestsRepo, isTestContainer);
+  await setupTestEnv(version, jdksource, customizedSdkUrl, sdkdir, buildList, target, aqatestsRepo, openj9Repo, tkgRepo, vendorTestParams, aqasystemtestsRepo, prebuildContainer);
   process.chdir('TKG');
   process.env.PARALLEL_OPTIONS = `PARALLEL_OPTIONS=TEST=${target} TEST_TIME= NUM_MACHINES=${numMachines}`;
   await exec.exec(`make genParallelList ${process.env.PARALLEL_OPTIONS}`);
@@ -442,9 +442,9 @@ async function setupTestEnv(
   tkgRepo: string,
   vendorTestParams: string,
   aqasystemtestsRepo: string,
-  isTestContainer: string
+  prebuildContainer: string
   ):  Promise<void> {
-    if (isTestContainer == "false") {
+    if (prebuildContainer == "false") {
       await installPlatformDependencies();
     }   
     setupEnvVariables(version, jdksource, buildList, sdkdir);
