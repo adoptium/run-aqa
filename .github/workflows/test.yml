@@ -6,21 +6,6 @@ on:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
 jobs:
-  openjdk: # make sure build/ci work properly
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, macos-latest]
-    steps:
-    - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-    - name: AQA
-      uses: ./
-      with: 
-        version: '11'
-        jdksource: 'github-hosted'
-        build_list: 'openjdk'
-        target: '_jdk_custom'
   openjdk_disto: # make sure build/ci work properly with other distros
     runs-on: ubuntu-latest
     container:
@@ -38,3 +23,25 @@ jobs:
         jdksource: 'github-hosted'
         build_list: 'openjdk'
         target: '_jdk_custom'
+  test_container: # make sure build/ci work properly with other distros
+        runs-on: ubuntu-latest
+        container:
+          image: ${{ matrix.image }}
+        strategy:
+          fail-fast: false
+          matrix:
+            image: ['ghcr.io/adoptium/test-containers:ubuntu2204']
+        steps:
+        - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        - uses: actions/setup-java@7a6d8a8234af8eb26422e24e3006232cccaa061b # v4.6.0
+          with:
+            java-version: '17'
+            distribution: 'temurin'
+        - name: AQA
+          uses: ./
+          with: 
+            version: '17'
+            jdksource: 'install-jdk'
+            build_list: 'openjdk'
+            target: '_jdk_custom'
+            prebuildContainer: 'true'

@@ -26,6 +26,7 @@ async function run(): Promise<void> {
     const vendorTestShas = core.getInput('vendor_testShas', {required: false})
     const runParallel = core.getInput('run_parallel', {required: false})
     const numMachines = core.getInput('num_machines', {required: false})
+    let prebuildContainer = core.getInput('prebuildContainer', {required: false})
     let vendorTestParams = ''
     //  let arch = core.getInput("architecture", { required: false })
     if (
@@ -74,6 +75,9 @@ async function run(): Promise<void> {
     if (sdkdir === '') {
       sdkdir = process.cwd()
     }
+    if (prebuildContainer === '') {
+      prebuildContainer = 'false'
+    }
     if(runParallel === 'true' && numMachines != '1') {
 
       await runaqa.setupParallelEnv(
@@ -88,7 +92,8 @@ async function run(): Promise<void> {
         tkgRepo,
         vendorTestParams,
         aqasystemtestsRepo,
-        numMachines
+        numMachines,
+        prebuildContainer
       )
     }
     else {
@@ -104,7 +109,8 @@ async function run(): Promise<void> {
         openj9Repo,
         tkgRepo,
         vendorTestParams,
-        aqasystemtestsRepo
+        aqasystemtestsRepo,
+        prebuildContainer
       )
     }
   } catch (error) {
