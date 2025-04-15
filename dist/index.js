@@ -439,7 +439,18 @@ function getAqaTestsRepo(aqatestsRepo, version, buildList) {
             if (buildList === 'openjdk' && version != '') {
                 process.chdir('openjdk');
                 // Shallow clone the adoptium JDK version - quietly - if there is a reference repo obtain objects from there - destination is openjdk-jdk
-                yield exec.exec(`git clone --depth 1 -q --reference-if-able ${process.env.GITHUB_WORKSPACE}/openjdk_cache https://github.com/adoptium/jdk${version}.git openjdk-jdk`);
+                try {
+                    let openJDKGitCmd = "git clone --depth 1 -q --reference-if-able ${process.env.GITHUB_WORKSPACE}/openjdk_cache https://github.com/adoptium/jdk${version}";
+                    const exitCode = yield exec.exec(`git ls-remote -h https://github.com/adoptium/jdk${version}u.git`);
+                    if (exitCode == 0) {
+                        openJDKGitCmd += 'u';
+                    }
+                    openJDKGitCmd += '.git openjdk-jdk';
+                    yield exec.exec(`${openJDKGitCmd}`);
+                }
+                catch (err) {
+                    console.error("Git clone openjdk error", err);
+                }
                 process.chdir('../');
             }
         }
