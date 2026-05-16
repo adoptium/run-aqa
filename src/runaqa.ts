@@ -2,27 +2,11 @@ import * as exec from '@actions/exec'
 import * as core from '@actions/core'
 import * as io from '@actions/io'
 import * as tc from '@actions/tool-cache'
-import * as path from 'path'
 import * as fs from 'fs'
 import {ExecOptions} from '@actions/exec/lib/interfaces'
 
-let tempDirectory = process.env['RUNNER_TEMP'] || ''
 const IS_WINDOWS = process.platform === 'win32'
 const IS_MACOS = process.platform === 'darwin'
-
-if (!tempDirectory) {
-  let baseLocation
-
-  if (IS_WINDOWS) {
-    // On windows use the USERPROFILE env variable
-    baseLocation = process.env['USERPROFILE'] || 'C:\\'
-  } else if (IS_MACOS) {
-    baseLocation = '/Users'
-  } else {
-    baseLocation = '/home'
-  }
-  tempDirectory = path.join(baseLocation, 'actions', 'temp')
-}
 
 /**
  * Runs aqa tests
@@ -194,45 +178,19 @@ async function installPlatformDependencies(): Promise<void> {
         core.warning('Unexpected error')
       }
     }
-    const antContribFile = await tc.downloadTool(
-      `https://sourceforge.net/projects/ant-contrib/files/ant-contrib/ant-contrib-1.0b2/ant-contrib-1.0b2-bin.zip/download`
-    )
-    await tc.extractZip(`${antContribFile}`, `${tempDirectory}`)
-    await io.cp(
-      `${tempDirectory}/ant-contrib/lib/ant-contrib.jar`,
-      `${process.env.ANT_HOME}\\lib`
-    )
   } else if (IS_MACOS) {
-    await exec.exec('brew install ant-contrib')
     await exec.exec('sudo sysctl -w kern.sysv.shmall=655360')
     await exec.exec('sudo sysctl -w kern.sysv.shmmax=125839605760')
   } else {
     if (fs.existsSync('/usr/bin/apt-get')) {
       // Debian Based
       await exec.exec('sudo apt-get update')
-      await exec.exec('sudo apt-get install ant-contrib -y')
     } else if (fs.existsSync('/usr/bin/yum')) {
       // RPM Based
       await exec.exec('sudo yum update -y')
-      const antContribFile = await tc.downloadTool(
-        `https://sourceforge.net/projects/ant-contrib/files/ant-contrib/ant-contrib-1.0b2/ant-contrib-1.0b2-bin.zip/download`
-      )
-      await tc.extractZip(`${antContribFile}`, `${tempDirectory}`)
-      await io.cp(
-        `${tempDirectory}/ant-contrib/lib/ant-contrib.jar`,
-        `${process.env.ANT_HOME}\\lib`
-      )
     } else if (fs.existsSync('/sbin/apk')) {
       // Alpine Based
       await exec.exec('apk update')
-      const antContribFile = await tc.downloadTool(
-        `https://sourceforge.net/projects/ant-contrib/files/ant-contrib/ant-contrib-1.0b2/ant-contrib-1.0b2-bin.zip/download`
-      )
-      await tc.extractZip(`${antContribFile}`, `${tempDirectory}`)
-      await io.cp(
-        `${tempDirectory}/ant-contrib/lib/ant-contrib.jar`,
-        `${process.env.ANT_HOME}\\lib`
-      )
     }
     // environment
     if ('RUNNER_USER' in process.env) {
