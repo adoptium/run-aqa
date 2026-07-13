@@ -8,15 +8,15 @@ on:
 jobs:
   openjdk_disto: # make sure build/ci work properly with other distros
     runs-on: ubuntu-latest
-    env:
-      ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: true
     container:
       image: ${{ matrix.image }}
     strategy:
       fail-fast: false
       matrix:
-        image: [adoptopenjdk/alpine3_build_image]
+        image: [eclipse-temurin:8-jdk-alpine]
     steps:
+    - name: Install build tools
+      run: apk add --no-cache bash git make perl curl
     - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
     - name: AQA
       uses: ./
