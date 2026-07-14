@@ -16,7 +16,7 @@ jobs:
         image: [eclipse-temurin:8-jdk-alpine]
     steps:
     - name: Install build tools
-      run: apk add --no-cache bash git make perl curl
+      run: apk add --no-cache ant bash git make perl curl
     - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
     - name: AQA
       uses: ./
