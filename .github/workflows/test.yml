@@ -19,10 +19,10 @@ jobs:
       run: |
         apk add --no-cache bash git make perl curl
         ANT_VERSION=1.10.15
-        wget -q "https://archive.apache.org/dist/ant/binaries/apache-ant-${ANT_VERSION}-bin.tar.gz" -O /tmp/ant.tar.gz
-        wget -q "https://archive.apache.org/dist/ant/binaries/apache-ant-${ANT_VERSION}-bin.tar.gz.sha512" -O /tmp/ant.tar.gz.sha512
-        cd /tmp && sha512sum -c ant.tar.gz.sha512
-        tar -xzf /tmp/ant.tar.gz -C /opt
+        wget "https://archive.apache.org/dist/ant/binaries/apache-ant-${ANT_VERSION}-bin.tar.gz" -O "/tmp/apache-ant-${ANT_VERSION}-bin.tar.gz"
+        wget "https://archive.apache.org/dist/ant/binaries/apache-ant-${ANT_VERSION}-bin.tar.gz.sha512" -O "/tmp/apache-ant-${ANT_VERSION}-bin.tar.gz.sha512"
+        cd /tmp && sha512sum -c "apache-ant-${ANT_VERSION}-bin.tar.gz.sha512"
+        tar -xzf "/tmp/apache-ant-${ANT_VERSION}-bin.tar.gz" -C /opt
         ln -sf /opt/apache-ant-${ANT_VERSION}/bin/ant /usr/local/bin/ant
     - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
     - name: AQA
