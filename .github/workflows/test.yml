@@ -21,7 +21,7 @@ jobs:
         ANT_VERSION=1.10.15
         wget "https://archive.apache.org/dist/ant/binaries/apache-ant-${ANT_VERSION}-bin.tar.gz" -O "/tmp/apache-ant-${ANT_VERSION}-bin.tar.gz"
         wget "https://archive.apache.org/dist/ant/binaries/apache-ant-${ANT_VERSION}-bin.tar.gz.sha512" -O "/tmp/apache-ant-${ANT_VERSION}-bin.tar.gz.sha512"
-        cd /tmp && echo "$(cat apache-ant-${ANT_VERSION}-bin.tar.gz.sha512 | tr -d '[:space:]')  apache-ant-${ANT_VERSION}-bin.tar.gz" | sha512sum -c -
+        cd /tmp && echo "$(tr -d '[:space:]' < apache-ant-${ANT_VERSION}-bin.tar.gz.sha512)  apache-ant-${ANT_VERSION}-bin.tar.gz" | sha512sum -c -
         tar -xzf "/tmp/apache-ant-${ANT_VERSION}-bin.tar.gz" -C /opt
         ln -sf /opt/apache-ant-${ANT_VERSION}/bin/ant /usr/local/bin/ant
     - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
