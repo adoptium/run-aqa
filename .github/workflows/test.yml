@@ -6,6 +6,32 @@ on:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
 jobs:
+  openjdk_disto: # make sure build/ci work properly with other distros
+    runs-on: ubuntu-latest
+    container:
+      image: ${{ matrix.image }}
+    strategy:
+      fail-fast: false
+      matrix:
+        image: [eclipse-temurin:8-jdk-alpine]
+    steps:
+    - name: Install build tools
+      run: |
+        apk add --no-cache bash git make perl curl
+        ANT_VERSION=1.10.15
+        wget "https://archive.apache.org/dist/ant/binaries/apache-ant-${ANT_VERSION}-bin.tar.gz" -O "/tmp/apache-ant-${ANT_VERSION}-bin.tar.gz"
+        wget "https://archive.apache.org/dist/ant/binaries/apache-ant-${ANT_VERSION}-bin.tar.gz.sha512" -O "/tmp/apache-ant-${ANT_VERSION}-bin.tar.gz.sha512"
+        cd /tmp && echo "$(tr -d '[:space:]' < apache-ant-${ANT_VERSION}-bin.tar.gz.sha512)  apache-ant-${ANT_VERSION}-bin.tar.gz" | sha512sum -c -
+        tar -xzf "/tmp/apache-ant-${ANT_VERSION}-bin.tar.gz" -C /opt
+        ln -sf /opt/apache-ant-${ANT_VERSION}/bin/ant /usr/local/bin/ant
+    - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+    - name: AQA
+      uses: ./
+      with: 
+        version: '8'
+        jdksource: 'github-hosted'
+        build_list: 'openjdk'
+        target: '_jdk_custom'
   test_container: # make sure build/ci work properly with other distros
         runs-on: ubuntu-latest
         container:
@@ -16,7 +42,7 @@ jobs:
             image: ['ghcr.io/adoptium/test-containers:ubuntu2204']
         steps:
         - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-        - uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
+        - uses: actions/setup-java@0f481fcb613427c0f801b606911222b5b6f3083a # v5.5.0
           with:
             java-version: '17'
             distribution: 'temurin'
