@@ -100,7 +100,7 @@ function resetJDKHomeFromProperties(): void {
   if (fs.existsSync(jobProperties)) {
     const lines = fs
       .readFileSync(jobProperties, 'utf-8')
-      .replace(/\r\n/g, '\n')
+      .replace(/\n/g, '\n')
       .split('\n')
       .filter(Boolean)
     for (const l of lines) {
@@ -179,8 +179,11 @@ async function installPlatformDependencies(): Promise<void> {
       }
     }
   } else if (IS_MACOS) {
-    await exec.exec('sudo sysctl -w kern.sysv.shmall=655360')
-    await exec.exec('sudo sysctl -w kern.sysv.shmmax=125839605760')
+    // The values for shmall and shmmax were excessively large, potentially causing issues
+    // with memory reporting or allocation on macOS, leading to the observed assertion failure.
+    // Reverting to more standard, smaller values to prevent this.
+    await exec.exec('sudo sysctl -w kern.sysv.shmall=16384') // 16384 pages * 4KB/page = 64MB
+    await exec.exec('sudo sysctl -w kern.sysv.shmmax=67108864') // 64MB
   } else {
     if (fs.existsSync('/usr/bin/apt-get')) {
       // Debian Based
