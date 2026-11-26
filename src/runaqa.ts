@@ -100,7 +100,7 @@ function resetJDKHomeFromProperties(): void {
   if (fs.existsSync(jobProperties)) {
     const lines = fs
       .readFileSync(jobProperties, 'utf-8')
-      .replace(/\n/g, '\n')
+      .replace(/\r\n/g, '\n')
       .split('\n')
       .filter(Boolean)
     for (const l of lines) {
